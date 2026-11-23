@@ -21,9 +21,11 @@ export type BucketDef = {
   note?: string;
 };
 
-const equity = (key: string, label: string, header: string, note?: string): BucketDef => ({ key, label, kind: "active", asset: "equity", header: new RegExp(`Equity Scheme\\s*-\\s*${header}`, "i"), directGrowth: true, note });
-const index = (key: string, label: string, name: RegExp, exclude: string[] = []): BucketDef => ({ key, label, kind: "passive", asset: "equity", header: /Other Scheme\s*-\s*Index Funds/i, name, exclude: ["equal weight", "momentum", "quality", "value", "low vol", "alpha", "dividend", "multicap", "bharat bond", "g-sec", "gilt", "sdl", "bond", "crisil", "debt", ...exclude], directGrowth: true });
-const debt = (key: string, label: string, header: string): BucketDef => ({ key, label, kind: "debt", asset: "debt", header: new RegExp(`Debt Scheme\\s*-\\s*${header}`, "i"), directGrowth: true });
+// Category text may come from an AMFI section header ("Open Ended Schemes(Equity Scheme - Mid Cap Fund)")
+// or from a category column ("Mid Cap Fund"); the look-behind stops "Large & Mid Cap Fund" matching "Mid Cap Fund".
+const equity = (key: string, label: string, header: string, note?: string): BucketDef => ({ key, label, kind: "active", asset: "equity", header: new RegExp(`(?<![&\\w]\\s*)${header}`, "i"), directGrowth: true, note });
+const index = (key: string, label: string, name: RegExp, exclude: string[] = []): BucketDef => ({ key, label, kind: "passive", asset: "equity", header: /Index Funds?\b/i, name, exclude: ["equal weight", "momentum", "quality", "value", "low vol", "alpha", "dividend", "multicap", "bharat bond", "g-sec", "gilt", "sdl", "bond", "crisil", "debt", ...exclude], directGrowth: true });
+const debt = (key: string, label: string, header: string): BucketDef => ({ key, label, kind: "debt", asset: "debt", header: new RegExp(header, "i"), directGrowth: true });
 
 export const BUCKETS: BucketDef[] = [
   index("idx_n50", "Nifty 50 index fund", /nifty\s*50\b/, ["next 50", "nifty 500", "nifty 50 value", "arbitrage"]),
@@ -44,8 +46,8 @@ export const BUCKETS: BucketDef[] = [
   equity("contra", "Contra", "Contra Fund"),
   equity("divyield", "Dividend yield", "Dividend Yield Fund"),
   equity("elss", "ELSS (tax saver)", "ELSS", "3-year lock-in; deduction only under the old tax regime."),
-  { key: "gold", label: "Gold ETF / gold fund", kind: "gold", asset: "gold", header: /(Gold ETF|Other\s+ETFs|FoF Domestic)/i, name: /gold/, exclude: ["silver", "multi asset", "multi-asset", "equity"], directGrowth: true },
-  { key: "arbitrage", label: "Arbitrage", kind: "arbitrage", asset: "debt", header: /Hybrid Scheme\s*-\s*Arbitrage Fund/i, directGrowth: true, note: "Equity taxation with debt-like risk; suits money needed in 1–3 years." },
+  { key: "gold", label: "Gold ETF / gold fund", kind: "gold", asset: "gold", header: /(Gold ETF|Other\s+ETFs|FoF Domestic|Fund of Funds? \(?Domestic)/i, name: /gold/, exclude: ["silver", "multi asset", "multi-asset", "equity"], directGrowth: true },
+  { key: "arbitrage", label: "Arbitrage", kind: "arbitrage", asset: "debt", header: /Arbitrage Fund/i, directGrowth: true, note: "Equity taxation with debt-like risk; suits money needed in 1–3 years." },
   debt("liquid", "Liquid", "Liquid Fund"),
   debt("shortdur", "Short duration", "Short Duration Fund"),
   debt("corpbond", "Corporate bond", "Corporate Bond Fund"),

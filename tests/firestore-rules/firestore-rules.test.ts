@@ -5,7 +5,7 @@ import {
   assertSucceeds,
   initializeTestEnvironment
 } from "@firebase/rules-unit-testing";
-import { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, updateDoc, where } from "firebase/firestore";
 
 const projectId = `numsum-rules-${Date.now()}`;
 
@@ -80,7 +80,7 @@ async function run() {
     await assertSucceeds(getDoc(doc(publicDb, "competitions", "open-competition")));
     await assertFails(getDoc(doc(publicDb, "competitions", "draft-competition")));
     await assertFails(getDocs(query(collection(publicDb, "competitions"), where("visibility", "==", "public"))));
-    await assertSucceeds(getDocs(query(collection(publicDb, "competitions"), where("visibility", "==", "public"), where("status", "in", ["published", "upcoming", "open", "closed", "results_declared"]))));
+    await assertSucceeds(getDocs(query(collection(publicDb, "competitions"), where("visibility", "==", "public"), where("status", "in", ["published", "open", "registration_closed", "submission_closed", "evaluation", "results_declared"]))));
     await assertFails(getDoc(doc(publicDb, "competition_submissions", "own-submission")));
     await assertFails(getDoc(doc(publicDb, "competition_evaluations", "evaluation")));
     await assertFails(getDoc(doc(publicDb, "governance_documents", "governance")));
@@ -127,6 +127,17 @@ async function run() {
     await assertSucceeds(getDoc(doc(adminDb, "governance_documents", "governance")));
     await assertSucceeds(setDoc(doc(adminDb, "competition_evaluations", "admin-eval"), { score: 100 }));
     await assertSucceeds(updateDoc(doc(adminDb, "problem_statements", "private-problem"), { status: "published", visibility: "public" }));
+
+    // Public enquiry form: anyone can create a valid lead, nobody but admins can read it.
+    const lead = { name: "Test Buyer", email: "buyer@example.com", topic: "iris_demo", message: "Please share a demo of IRIS.", sourcePage: "/products/iris", status: "new", createdAt: serverTimestamp() };
+    await assertSucceeds(addDoc(collection(publicDb, "enquiries"), lead));
+    await assertFails(addDoc(collection(publicDb, "enquiries"), { ...lead, status: "qualified" }));
+    await assertFails(addDoc(collection(publicDb, "enquiries"), { ...lead, email: "not-an-email" }));
+    await assertFails(addDoc(collection(publicDb, "enquiries"), { ...lead, role: "admin" }));
+    await assertFails(getDocs(collection(publicDb, "enquiries")));
+    await assertSucceeds(getDocs(collection(adminDb, "enquiries")));
+    await assertSucceeds(getDoc(doc(publicDb, "market_meta", "fund_summary")));
+    await assertFails(setDoc(doc(adminDb, "market_meta", "fund_summary"), { fundCount: 1 }));
 
     await assertSucceeds(getDoc(doc(superAdminDb, "problem_admin_metadata", "private-problem")));
     const result = await getDoc(doc(superAdminDb, "unmatched_collection", "anything"));

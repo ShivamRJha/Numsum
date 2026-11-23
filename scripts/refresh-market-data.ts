@@ -14,7 +14,7 @@ import { BUCKETS, BUCKET_BY_KEY, classifyScheme, type FundKind } from "../lib/in
 import { annualVol, cagr, historyYears, maxDrawdown, median, monthEnds, monthKeys, monthlyReturns, parseMfapiHistory, percentiles, sortino, std, weighted, type NavPoint } from "../lib/invest/metrics";
 import type { BucketSummary, FundRow, FundSummaryDoc, RefreshStatusDoc } from "../lib/invest/types";
 
-const AMFI_URLS = ["https://portal.amfiindia.com/spages/NAVAll.txt", "https://www.amfiindia.com/spages/NAVAll.txt"];
+const AMFI_URLS = ["https://portal.amfiindia.com/spages/NAVAll.txt", "https://www.amfiindia.com/spages/NAVAll.txt", "https://portal.amfiindia.com/spages/Original_NAVAll.txt"];
 const MFAPI = (code: string) => `https://api.mfapi.in/mf/${code}`;
 const DRY = process.argv.includes("--dry-run");
 const LIMIT = Number((process.argv.find((a) => a.startsWith("--limit=")) || "").split("=")[1] || 0);
@@ -44,21 +44,42 @@ function parseAmfiDate(value: string) {
   return Number.isNaN(t) ? "" : new Date(t).toISOString().slice(0, 10);
 }
 
+/**
+ * Parses the AMFI NAV file. Handles the classic layout (";"-separated rows under
+ * "Open Ended Schemes(Equity Scheme - …)" section headers and fund-house lines) and
+ * newer layouts that use "|" and/or carry category / fund-house columns.
+ */
 export function parseAmfi(text: string): Candidate[] {
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const sample = lines.slice(0, 80).join("\n");
+  const delim = (sample.match(/\|/g) || []).length > (sample.match(/;/g) || []).length ? "|" : ";";
+  const headerLine = lines.find((l) => /scheme\s*code/i.test(l) && l.includes(delim));
+  const cols = (headerLine || "Scheme Code;ISIN;ISIN2;Scheme Name;Net Asset Value;Date").split(delim).map((c) => c.trim().toLowerCase());
+  const find = (...tests: RegExp[]) => cols.findIndex((c) => tests.some((t) => t.test(c)));
+  const iCode = Math.max(0, find(/scheme\s*code/));
+  const iName = find(/scheme\s*name/) >= 0 ? find(/scheme\s*name/) : 3;
+  const iNav = find(/net\s*asset\s*value/, /^nav$/) >= 0 ? find(/net\s*asset\s*value/, /^nav$/) : 4;
+  const iDate = find(/date/) >= 0 ? find(/date/) : 5;
+  const iCats = cols.map((c, k) => (/(category|scheme\s*type|sub.?type|class)/.test(c) ? k : -1)).filter((k) => k >= 0);
+  const iAmc = find(/(amc|fund\s*house|mutual\s*fund\s*name)/);
+
   const out: Candidate[] = [];
   let header = "", amc = "";
-  for (const raw of text.split(/\r?\n/)) {
-    const line = raw.trim();
-    if (!line) continue;
-    if (/Schemes\s*\(/i.test(line) && !line.includes(";")) { header = line; continue; }
-    if (!line.includes(";")) { amc = line; continue; }
-    const parts = line.split(";");
-    if (parts.length < 6 || !/^\d+$/.test(parts[0].trim())) continue;
-    const [code, , , name, navStr, date] = parts.map((p) => p.trim());
-    const nav = Number(navStr);
-    const bucket = classifyScheme(header, name);
+  for (const line of lines) {
+    if (line === headerLine) continue;
+    if (!line.includes(delim)) {
+      if (/schemes?\s*\(/i.test(line)) header = line; else amc = line;
+      continue;
+    }
+    const parts = line.split(delim).map((x) => x.trim());
+    const code = parts[iCode];
+    if (!/^\d+$/.test(code || "")) continue;
+    const name = parts[iName] || "";
+    const nav = Number((parts[iNav] || "").replace(/,/g, ""));
+    const category = [header, ...iCats.map((k) => parts[k] || "")].join(" ");
+    const bucket = classifyScheme(category, name);
     if (!bucket || !(nav > 0)) continue;
-    out.push({ code, name, amc, bucket: bucket.key, nav, navDate: parseAmfiDate(date) });
+    out.push({ code, name, amc: (iAmc >= 0 ? parts[iAmc] : "") || amc, bucket: bucket.key, nav, navDate: parseAmfiDate(parts[iDate] || "") });
   }
   return out;
 }
@@ -180,11 +201,18 @@ async function firestore(): Promise<Db> {
 
 async function main() {
   const started = Date.now();
-  let text = "";
-  for (const url of AMFI_URLS) { try { text = await fetchText(url); if (text.length > 100_000) break; } catch (err) { console.warn(`AMFI fetch failed: ${(err as Error).message}`); } }
-  if (!text) throw new Error("Could not download the AMFI NAV file.");
-  let candidates = parseAmfi(text);
-  console.log(`AMFI: ${candidates.length} schemes in planner buckets`);
+  let candidates: Candidate[] = [];
+  for (const url of AMFI_URLS) {
+    try {
+      const text = await fetchText(url);
+      const parsed = parseAmfi(text);
+      console.log(`AMFI ${url}: ${text.length} bytes, ${parsed.length} schemes in planner buckets`);
+      if (!parsed.length) console.log(`  first lines:\n${text.split(/\r?\n/).filter(Boolean).slice(0, 8).map((l) => `  | ${l.slice(0, 200)}`).join("\n")}`);
+      if (parsed.length > candidates.length) candidates = parsed;
+      if (parsed.length >= MIN_FUNDS) break;
+    } catch (err) { console.warn(`AMFI fetch failed: ${(err as Error).message}`); }
+  }
+  if (!candidates.length) throw new Error("Could not read any schemes from the AMFI NAV file.");
   if (LIMIT) candidates = candidates.slice(0, LIMIT);
 
   let done = 0;
