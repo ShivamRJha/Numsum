@@ -39,3 +39,6 @@ export default async function NewDiscussion() {
     </AuthGate>
   );
 }
+
+/** Reads live records on every request (data rules differ per collection). */
+export const dynamic = "force-dynamic";

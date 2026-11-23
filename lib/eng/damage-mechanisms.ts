@@ -3,7 +3,6 @@
  * with a screening rule per mechanism. A "yes" is a reason to look, not a finding — the engineer decides.
  * x (inputs): mat (CS LAS SS3 SS4 DSS NI CU AL TI CI), tmax, tmin and yes/no flags (see DM_Q).
  */
-/* eslint-disable */
 export type DmX = Record<string, any>;
 export type DmAnswer = "yes" | "maybe" | "no" | "?";
 export type DmScreen = { r: DmAnswer; why?: string; need?: string[] };
