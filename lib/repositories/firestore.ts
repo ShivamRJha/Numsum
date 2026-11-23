@@ -174,7 +174,6 @@ export const COLLECTIONS = {
   systemStats: "system_stats",
   enquiries: "enquiries",
   marketFunds: "market_funds",
-  marketMeta: "market_meta",
   investmentPlans: "investment_plans",
   systemDocuments: "system_documents",
   settings: "settings",

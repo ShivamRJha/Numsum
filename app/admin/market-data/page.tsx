@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { LoadingState } from "@/components/data-states";
 import { Card } from "@/components/ui";
 import { db } from "@/lib/firebase";
-import type { FundSummaryDoc, RefreshStatusDoc } from "@/lib/invest/types";
+import { META_COLLECTION, STATUS_DOC, SUMMARY_DOC, type FundSummaryDoc, type RefreshStatusDoc } from "@/lib/invest/types";
 
 const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—");
 
@@ -14,7 +14,7 @@ export default function AdminMarketDataPage() {
   const [summary, setSummary] = useState<FundSummaryDoc | null>(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
-    Promise.all([getDoc(doc(db, "market_meta", "refresh_status")), getDoc(doc(db, "market_meta", "fund_summary"))])
+    Promise.all([getDoc(doc(db, META_COLLECTION, STATUS_DOC)), getDoc(doc(db, META_COLLECTION, SUMMARY_DOC))])
       .then(([s, f]) => { setStatus(s.exists() ? (s.data() as RefreshStatusDoc) : null); setSummary(f.exists() ? (f.data() as FundSummaryDoc) : null); })
       .catch(() => undefined).finally(() => setLoading(false));
   }, []);

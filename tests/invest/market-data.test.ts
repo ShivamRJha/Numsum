@@ -58,3 +58,11 @@ assert.ok(Math.abs((byName.Young.score as number) - 50) < 30, "young fund shrunk
 assert.equal(buckets.large.count, 3);
 assert.equal(buckets.large.top[0].n, "Steady");
 console.log("market-data tests passed", rows.map((r) => `${r.name}:${r.score}/${r.confidence}`).join(" "));
+
+// Newer pipe-separated layout with category and fund-house columns
+const piped = `Scheme Code|Scheme Name|Fund House|Scheme Category|NAV|NAV Date
+3001|Gamma Mid Cap Fund - Direct Plan - Growth|Gamma MF|Equity Scheme - Mid Cap Fund|55.1|20-Nov-2026
+3002|Gamma Large & Mid Cap Fund - Direct Plan - Growth|Gamma MF|Large & Mid Cap Fund|44.0|20-Nov-2026
+3003|Gamma Liquid Fund - Direct Plan - Growth|Gamma MF|Liquid Fund|2500.5|20-Nov-2026`;
+assert.deepEqual(parseAmfi(piped).map((p) => [p.code, p.bucket, p.amc]), [["3001", "mid", "Gamma MF"], ["3002", "largemid", "Gamma MF"], ["3003", "liquid", "Gamma MF"]]);
+console.log("pipe layout parsed");
