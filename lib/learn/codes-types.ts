@@ -3,7 +3,8 @@
 export type TopicKey =
   | "scope" | "organisation" | "planning" | "intervals" | "cml" | "methods" | "corrosion-rate" | "mawp"
   | "pressure-test" | "repair" | "prd" | "cui" | "buried" | "damage" | "rbi-basics" | "pof" | "cof"
-  | "risk" | "ffs" | "metal-loss" | "cracks" | "high-temp" | "records" | "piping-components";
+  | "risk" | "ffs" | "metal-loss" | "cracks" | "high-temp" | "records" | "piping-components"
+  | "materials" | "material-tests" | "consumables" | "allowable-stress" | "nde" | "nde-procedure" | "qap";
 
 export type Chapter = {
   id: string;

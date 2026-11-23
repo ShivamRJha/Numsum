@@ -22,7 +22,7 @@ export default async function TopicPage({ params }: { params: Promise<{ topic: s
   const others = TOPICS.filter((x) => x.group === t.group && x.slug !== t.slug);
   return <article className="max-w-4xl">
     <JsonLd data={articleLd({ title: t.name, description: t.intro, path: `/learn/codes/topics/${t.slug}` })} />
-    <Crumbs items={[["API codes academy", "/learn/codes"], [t.name, `/learn/codes/topics/${t.slug}`]]} />
+    <Crumbs items={[["Codes academy", "/learn/codes"], [t.name, `/learn/codes/topics/${t.slug}`]]} />
     <p className="mt-4 text-xs font-semibold uppercase tracking-[.14em] text-amber-100/80">Topic · {t.group}</p>
     <h1 className="mt-1 font-display text-3xl font-bold tracking-[-.03em] text-white md:text-4xl">{t.name}</h1>
     <p className="mt-3 text-lg leading-8 text-white/70">{t.intro}</p>

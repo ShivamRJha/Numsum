@@ -8,6 +8,8 @@ const MAP = {
   "hydrotest-pressure-calculator": dynamic(() => import("./hydrotest-calc").then((m) => m.HydrotestCalc), { loading: Skeleton }),
   "steam-trap-loss-calculator": dynamic(() => import("./steam-calc").then((m) => m.SteamCalc), { loading: Skeleton }),
   "damage-mechanism-screening": dynamic(() => import("./dm-screen").then((m) => m.DmScreen), { loading: Skeleton }),
+  "material-spec-finder": dynamic(() => import("./spec-finder").then((m) => m.SpecFinder), { loading: Skeleton }),
+  "qap-builder": dynamic(() => import("./qap-builder").then((m) => m.QapBuilder), { loading: Skeleton }),
 } as const;
 export function ToolClient({ slug }: { slug: string }) {
   const C = MAP[slug as keyof typeof MAP];
