@@ -1,7 +1,8 @@
 /** Offline checks for the market-data pipeline: npx tsx tests/invest/market-data.test.ts */
 import assert from "node:assert/strict";
 import { cagr, maxDrawdown, parseMfapiHistory, percentiles, type NavPoint } from "../../lib/invest/metrics";
-import { parseAmfi, scoreAll } from "../../scripts/refresh-market-data";
+import { computeFundStats, parseAmfi, parseTer, schemeKey, scoreFunds } from "../../lib/invest/funds-pipeline";
+import { adjustSplits, computeStockStats, investorChecks, verdict, type Bar } from "../../lib/invest/stocks";
 
 const DAY = 864e5;
 function series(years: number, annual: number, wobble: number, seed: number): NavPoint[] {
@@ -43,21 +44,37 @@ Beta Mutual Fund
 const parsed = parseAmfi(amfi);
 assert.deepEqual(parsed.map((p) => [p.code, p.bucket, p.amc, p.navDate]), [["1001", "large", "Alpha Mutual Fund", "2026-11-20"], ["2001", "idx_n50", "Beta Mutual Fund", "2026-11-20"]]);
 
-// Scoring: a steadier, higher-return fund ranks above a volatile, lower-return one
-const base = { amc: "X", nav: 1, navDate: "2026-11-20" };
-const loaded = [
-  { ...base, code: "a", name: "Steady", bucket: "large", series: series(8, 0.14, 0.6, 3) },
-  { ...base, code: "b", name: "Choppy", bucket: "large", series: series(8, 0.09, 2.5, 5) },
-  { ...base, code: "c", name: "Young", bucket: "large", series: series(1.5, 0.2, 1, 9) },
+// Scoring: a steadier, cheaper, higher-return fund ranks above a volatile, costly one
+const base = { amc: "X", nav: 1, navDate: "2026-11-20", bucket: "large" };
+const stats = [
+  computeFundStats({ ...base, code: "a", name: "Steady", ter: 0.5 }, series(8, 0.14, 0.6, 3))!,
+  computeFundStats({ ...base, code: "b", name: "Choppy", ter: 1.2 }, series(8, 0.09, 2.5, 5))!,
+  computeFundStats({ ...base, code: "c", name: "Young", ter: null }, series(1.5, 0.2, 1, 9))!,
 ];
-const { rows, buckets } = scoreAll(loaded);
+const { rows, buckets } = scoreFunds(stats);
 const byName = Object.fromEntries(rows.map((r) => [r.name, r]));
 assert.ok((byName.Steady.score as number) > (byName.Choppy.score as number), "steady beats choppy");
 assert.equal(byName.Young.confidence, "Low");
 assert.ok(Math.abs((byName.Young.score as number) - 50) < 30, "young fund shrunk toward 50");
 assert.equal(buckets.large.count, 3);
-assert.equal(buckets.large.top[0].n, "Steady");
-console.log("market-data tests passed", rows.map((r) => `${r.name}:${r.score}/${r.confidence}`).join(" "));
+assert.equal(byName.Steady.ter, 0.5);
+
+// Expense ratios join on the base scheme name
+const ter = parseTer('"NSDL Scheme Code","Scheme Name","Direct Plan - Base Expense Ratio (BER) (%)","Direct Plan - Total TER (%)"\n"X","Alpha Large Cap Fund",0.5,0.7\n');
+assert.equal(ter.get(schemeKey("Alpha Large Cap Fund - Direct Plan - Growth")), 0.59);
+
+// Stocks: split detection, statistics and checklist
+const DAYMS = 864e5; const t0 = Date.UTC(2020, 0, 1);
+const bars: Bar[] = Array.from({ length: 1500 }, (_, i) => ({ t: t0 + i * DAYMS, c: (100 + i * 0.1) * (i >= 700 ? 0.5 : 1), v: 1e5 }));
+const adj = adjustSplits(bars);
+assert.equal(adj.count, 1, "one 1:1 bonus detected");
+assert.ok(Math.abs(adj.bars[699].c - (100 + 699 * 0.1) * 0.5) < 1e-6, "pre-split prices halved");
+const st = computeStockStats("TEST", bars, bars)!;
+assert.ok(st.dma200! < st.price && st.beta1y! > 0.99 && st.mdd3y! > -0.01, "uptrend stats");
+const v = verdict(investorChecks(st, { roe: 0.2, de: 0.3, pe: 20, pb: 3, margin: 0.1, epsGrowth: 0.1 }, { indexPe: 22 }), st);
+assert.ok(["Strong", "Positive"].includes(v.label), `verdict ${v.label}`);
+
+console.log("market-data tests passed", rows.map((r) => `${r.name}:${r.score}/${r.confidence}`).join(" "), v.label);
 
 // Newer pipe-separated layout with category and fund-house columns
 const piped = `Scheme Code|Scheme Name|Fund House|Scheme Category|NAV|NAV Date

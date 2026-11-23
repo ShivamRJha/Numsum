@@ -11,7 +11,16 @@ export type PlanInputs = {
   inflation: number; // e.g. 0.06
   risk: Risk;
   returns: { equity: number; debt: number; gold: number };
+  /** Asset groups to leave out; their share is spread over the rest. */
+  exclude?: Exclusion[];
+  /** Use index funds instead of active flexi / small-cap funds. */
+  indexOnly?: boolean;
+  /** Share of the equity part to hold as a basket of direct stocks (0–0.5). */
+  stocksShare?: number;
 };
+
+export type Exclusion = "gold" | "debt" | "smallmid";
+export const EXCLUSION_LABELS: Record<Exclusion, string> = { gold: "Gold", debt: "Debt & arbitrage", smallmid: "Mid & small caps" };
 
 export const RISK_LABELS: Record<Risk, string> = { conservative: "Conservative", balanced: "Balanced", growth: "Growth", aggressive: "Aggressive" };
 
@@ -25,6 +34,9 @@ export const DEFAULT_INPUTS: PlanInputs = {
   inflation: 0.06,
   risk: "balanced",
   returns: { equity: 0.11, debt: 0.07, gold: 0.08 },
+  exclude: [],
+  indexOnly: false,
+  stocksShare: 0,
 };
 
 const EQUITY_BY_HORIZON: [number, Record<Risk, number>][] = [
@@ -50,20 +62,38 @@ export function suggestRisk(years: number): Risk {
   return years < 3 ? "conservative" : years < 5 ? "balanced" : years < 10 ? "growth" : "aggressive";
 }
 
-export function allocation(years: number, risk: Risk): AllocationLine[] {
+export function allocation(years: number, risk: Risk, opts: Pick<PlanInputs, "exclude" | "indexOnly" | "stocksShare"> = {}): AllocationLine[] {
+  const ex = new Set(opts.exclude || []);
   const equity = EQUITY_BY_HORIZON.find(([h]) => years < h)![1][risk];
   const gold = years < 3 ? 0 : GOLD[risk];
   const debt = Math.max(0, 1 - equity - gold);
-  const lines: AllocationLine[] = [];
-  for (const [bucket, s] of EQUITY_SPLIT[risk]) if (equity * s > 0) lines.push({ bucket, asset: "equity", share: equity * s, why: bucket.startsWith("idx_") ? "Low-cost index core" : bucket === "small" ? "Active small-cap — the one segment where managers have added value" : "Active flexi-cap for manager flexibility" });
-  if (gold > 0) lines.push({ bucket: "gold", asset: "gold", share: gold, why: "Diversifier that often rises when equity falls" });
-  if (debt > 0) {
+  let lines: AllocationLine[] = [];
+  for (const [bucket0, s] of EQUITY_SPLIT[risk]) {
+    if (equity * s <= 0) continue;
+    if (ex.has("smallmid") && (bucket0 === "small" || bucket0 === "idx_mid150")) continue;
+    const bucket = opts.indexOnly ? ({ flexi: "idx_n500", small: "idx_small250" } as Record<string, string>)[bucket0] || bucket0 : bucket0;
+    lines.push({ bucket, asset: "equity", share: equity * s, why: bucket.startsWith("idx_") ? "Low-cost index fund" : bucket === "small" ? "Active small-cap — the one segment where managers have added value" : "Active flexi-cap for manager flexibility" });
+  }
+  if (gold > 0 && !ex.has("gold")) lines.push({ bucket: "gold", asset: "gold", share: gold, why: "Diversifier that often rises when equity falls" });
+  if (debt > 0 && !ex.has("debt")) {
     const split: [string, number, string][] = years <= 1 ? [["liquid", 1, "Money needed within a year — capital safety first"]]
       : years <= 3 ? [["arbitrage", 0.6, "Equity taxation with debt-like risk"], ["liquid", 0.4, "Liquidity and safety"]]
       : [["shortdur", 0.5, "Steady accrual, limited interest-rate risk"], ["corpbond", 0.5, "High-quality corporate bonds"]];
     for (const [bucket, s, why] of split) lines.push({ bucket, asset: "debt", share: debt * s, why });
   }
-  return lines;
+  // Direct stocks replace part of the equity sleeve
+  const stocks = Math.min(0.5, Math.max(0, opts.stocksShare || 0));
+  if (stocks > 0) {
+    const eq = lines.filter((l) => l.asset === "equity").reduce((a, l) => a + l.share, 0);
+    if (eq > 0) {
+      lines = lines.map((l) => (l.asset === "equity" ? { ...l, share: l.share * (1 - stocks) } : l));
+      lines.push({ bucket: "stocks", asset: "equity", share: eq * stocks, why: "A diversified basket of direct stocks (max ~2 per industry)" });
+    }
+  }
+  // Re-normalise so excluded shares are spread over what is left
+  const total = lines.reduce((a, l) => a + l.share, 0);
+  if (!lines.length) return [{ bucket: "liquid", asset: "debt", share: 1, why: "Everything else excluded — parking in a liquid fund" }];
+  return lines.map((l) => ({ ...l, share: l.share / total }));
 }
 
 export function blendedReturn(lines: AllocationLine[], r: PlanInputs["returns"]) {
@@ -100,7 +130,7 @@ export function project(inputs: PlanInputs, annual: number) {
 }
 
 export function plan(inputs: PlanInputs) {
-  const lines = allocation(inputs.years, inputs.risk);
+  const lines = allocation(inputs.years, inputs.risk, inputs);
   const r = blendedReturn(lines, inputs.returns);
   const target = inputs.targetToday * Math.pow(1 + inputs.inflation, inputs.years);
   const points = project(inputs, r);

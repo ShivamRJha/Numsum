@@ -4,7 +4,12 @@ import { siteUrl } from "@/lib/site";
 const routes: [string, number, MetadataRoute.Sitemap[number]["changeFrequency"]][] = [
   ["/", 1, "weekly"],
   ["/products/iris", 0.9, "monthly"],
+  ["/tools", 0.9, "daily"],
   ["/tools/investment-planner", 0.9, "daily"],
+  ["/tools/funds", 0.8, "daily"],
+  ["/tools/stocks", 0.8, "daily"],
+  ["/tools/stock-analyzer", 0.8, "daily"],
+  ["/tools/portfolio", 0.6, "monthly"],
   ["/for-msmes", 0.8, "monthly"],
   ["/challenges", 0.8, "weekly"],
   ["/problem-statements", 0.7, "weekly"],
