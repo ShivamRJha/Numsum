@@ -4,23 +4,26 @@ import { AuthProvider } from "@/components/auth-provider";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { brand } from "@/lib/brand";
+import { Analytics } from "@/components/analytics";
+import { CONSENT_SCRIPT, GTM_ID } from "@/lib/analytics";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/space-grotesk";
 import "@fontsource-variable/jetbrains-mono";
 import "./globals.css";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+/** Pages are cached at the edge and rebuilt at most every 5 minutes (public data); signed-in data loads in the browser. */
+export const revalidate = 300;
 export const viewport: Viewport = { themeColor: "#02050a", colorScheme: "dark light" };
 
 export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   applicationName: "NumSum Labs",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://www.numsum.in"),
-  title: "NumSum Labs — MSME Industrial Innovation & Problem Solving Ecosystem",
-  description: "NumSum Labs helps MSMEs identify, structure, and solve industrial challenges through engineering collaboration, research, SOPs, innovation challenges, and pilot validation.",
+  title: "NumSum Labs — Free Inspection Engineering Calculators, IRIS Software & Investing Tools",
+  description: "Free calculators for inspection and plant engineers (ASME VIII, B31.3, API 510/570/653, API 571), IRIS inspection and reliability software, plain-language guides, and long-term SIP investing tools.",
   icons: { icon: brand.favicon, shortcut: brand.favicon, apple: brand.logo },
-  openGraph: { type: "website", siteName: "NumSum Labs", locale: "en_IN", title: "NumSum Labs — MSME Industrial Innovation & Problem Solving Ecosystem", description: "MSME-first industrial innovation through engineering collaboration, research, SOPs, challenges, and pilot validation.", images: [brand.ogImage] },
+  openGraph: { type: "website", siteName: "NumSum Labs", locale: "en_IN", title: "NumSum Labs — Engineering calculators, IRIS software & investing tools", description: "Free inspection engineering calculators, IRIS inspection software, guides and long-term investing tools.", images: [brand.ogImage] },
+  verification: process.env.NEXT_PUBLIC_GSC_VERIFICATION ? { google: process.env.NEXT_PUBLIC_GSC_VERIFICATION } : undefined,
   twitter: { card: "summary", title: "NumSum Labs", description: "MSME-first industrial innovation, inspection software and practical engineering tools." },
 };
-export default function RootLayout({ children }: { children: React.ReactNode }) { return <html lang="en" className="dark" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} /></head><body className="bg-navy font-sans antialiased"><AuthProvider><SiteHeader />{children}<SiteFooter /></AuthProvider></body></html>; }
+export default function RootLayout({ children }: { children: React.ReactNode }) { return <html lang="en" className="dark" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} /><script dangerouslySetInnerHTML={{ __html: CONSENT_SCRIPT }} /></head><body className="bg-navy font-sans antialiased">{GTM_ID && GTM_ID !== "off" && <noscript><iframe src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`} height="0" width="0" style={{ display: "none", visibility: "hidden" }} title="gtm" /></noscript>}<AuthProvider><SiteHeader />{children}<SiteFooter /><Analytics /></AuthProvider></body></html>; }

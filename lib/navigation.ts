@@ -5,30 +5,36 @@ export type MenuGroup = { label: string; links: MenuLink[] };
 
 /** Main site menu (header dropdowns and mobile accordion). */
 export const siteMenu: MenuGroup[] = [
-  { label: "Platform", links: [
-    { label: "For MSMEs", href: "/for-msmes", desc: "How NumSum structures and solves MSME problems" },
-    { label: "Submit a problem", href: "/submit-problem", desc: "Private intake — reviewed before any public step" },
-    { label: "MSME challenges", href: "/problem-statements", desc: "Approved public problem statements" },
-    { label: "Innovation challenges", href: "/challenges", desc: "Open challenges for students, experts and startups" },
-    { label: "Case studies", href: "/case-studies", desc: "Validated outcomes" },
-    { label: "Community", href: "/community", desc: "Discussions across the ecosystem" },
+  { label: "Engineering", links: [
+    { label: "All engineering tools", href: "/engineering", desc: "Free calculators for inspection and plant engineers" },
+    { label: "Pressure vessel thickness", href: "/engineering/pressure-vessel-thickness-calculator", desc: "Shell and heads, MAWP — ASME VIII-1" },
+    { label: "Pipe wall thickness", href: "/engineering/pipe-thickness-calculator", desc: "Required wall and schedule — ASME B31.3" },
+    { label: "Remaining life", href: "/engineering/remaining-life-calculator", desc: "Corrosion rate and next inspection — API 510/570/653" },
+    { label: "Damage mechanisms", href: "/engineering/damage-mechanism-screening", desc: "Screen all 69 API 571 mechanisms" },
   ] },
-  { label: "Products", links: [
+  { label: "Investing", links: [
+    { label: "Goal planner", href: "/tools/investment-planner", desc: "Monthly SIP, allocation and fund picks for a goal" },
+    { label: "Fund screener", href: "/tools/funds", desc: "Scores with expense ratios; compare funds" },
+    { label: "Stock analyzer", href: "/tools/stock-analyzer", desc: "The checks investors run before buying" },
+    { label: "All investing tools", href: "/tools", desc: "Stock screener, stock SIP builder, portfolio check" },
+  ] },
+  { label: "Learn", links: [
+    { label: "All guides", href: "/learn", desc: "Short, plain-language guides" },
+    { label: "Damage mechanisms library", href: "/learn/damage-mechanisms", desc: "All 69 API 571 mechanisms explained" },
+    { label: "Investing terms", href: "/learn/investing", desc: "CAGR, XIRR, Sharpe, P/E and more" },
+    { label: "Knowledge & SOPs", href: "/research", desc: "Approved research, knowledge assets and SOPs" },
+  ] },
+  { label: "IRIS", links: [
     { label: "IRIS inspection software", href: "/products/iris", desc: "Statutory & reliability inspections — office PC and offline tablet" },
     { label: "Book an IRIS demo", href: "/products/iris#demo", desc: "Walkthrough on your kind of equipment" },
   ] },
-  { label: "Invest tools", links: [
-    { label: "Goal planner", href: "/tools/investment-planner", desc: "Required SIP, allocation and fund picks" },
-    { label: "Fund screener", href: "/tools/funds", desc: "Scores with expense ratios; compare funds" },
-    { label: "Stock screener", href: "/tools/stocks", desc: "Nifty 500 scored vs industry peers" },
-    { label: "Stock analyzer", href: "/tools/stock-analyzer", desc: "The checks investors run before buying" },
-    { label: "Portfolio check", href: "/tools/portfolio", desc: "Correlation and diversification" },
-  ] },
-  { label: "Resources", links: [
+  { label: "For MSMEs", links: [
+    { label: "How it works", href: "/for-msmes", desc: "How NumSum structures and solves MSME problems" },
+    { label: "Submit a problem", href: "/submit-problem", desc: "Private intake — reviewed before any public step" },
+    { label: "Challenges", href: "/challenges", desc: "Open problems for students, experts and startups" },
+    { label: "Case studies", href: "/case-studies", desc: "Validated outcomes" },
+    { label: "Community", href: "/community", desc: "Discussions across the ecosystem" },
     { label: "MSME intelligence", href: "/msme-intelligence", desc: "Sector, state and cluster data" },
-    { label: "Knowledge & research", href: "/research", desc: "Approved research and knowledge assets" },
-    { label: "SOP library", href: "/sops", desc: "Practical standard operating procedures" },
-    { label: "Impact & pilots", href: "/pilots", desc: "Verified pilot outcomes" },
   ] },
 ];
 export const siteMenuLinks: MenuLink[] = [{ label: "About", href: "/about" }, { label: "Contact", href: "/contact" }];

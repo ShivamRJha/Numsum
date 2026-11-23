@@ -100,14 +100,16 @@ export function PlannerClient({ funds, buckets, navDate, picks, stockAsOf }: { f
           <div className="grid gap-4 sm:grid-cols-2">
             <Num id="pl-savings" label="Already saved for it" value={p.currentSavings} onChange={(v) => set("currentSavings", v)} step={10000} hint={inr(p.currentSavings)} />
             <Num id="pl-sip" label="Monthly SIP" value={p.monthlySip} onChange={(v) => set("monthlySip", v)} step={1000} hint={inr(p.monthlySip)} />
+          </div>
+          <details className="rounded-2xl border border-white/10 p-4"><summary className="cursor-pointer text-sm text-white/70">Step-up {Math.round(p.stepUp * 100)}% · inflation {Math.round(p.inflation * 1000) / 10}% — change</summary><div className="mt-3 grid gap-4 sm:grid-cols-2">
             <Num id="pl-step" label="Yearly SIP increase (step-up)" value={Math.round(p.stepUp * 100)} onChange={(v) => set("stepUp", v / 100)} step={1} max={50} suffix="%" />
             <Num id="pl-infl" label="Inflation" value={Math.round(p.inflation * 1000) / 10} onChange={(v) => set("inflation", v / 100)} step={0.5} max={20} suffix="%" />
-          </div>
+          </div></details>
           <fieldset><legend className="mb-1.5 text-sm text-white/75">Risk you are comfortable with</legend><div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{(Object.keys(RISK_LABELS) as Risk[]).map((r) => <button key={r} type="button" aria-pressed={p.risk === r} onClick={() => set("risk", r)} className={cn("rounded-2xl border px-3 py-2 text-sm", p.risk === r ? "border-amber-100/70 bg-amber-100/15 text-amber-50" : "border-white/12 text-white/65 hover:text-white")}>{RISK_LABELS[r]}</button>)}</div>{p.risk !== suggested && <p className="mt-2 text-xs text-white/50">For {p.years} years, “{RISK_LABELS[suggested]}” is the usual fit.</p>}</fieldset>
         </div>
       </Card>
-      <Card className="premium-card">
-        <h2 className="font-display text-2xl">Customise the mix</h2>
+      <details className="glass premium-card group rounded-3xl p-6">
+        <summary className="flex cursor-pointer list-none items-center justify-between font-display text-2xl">Customise the mix <span className="font-sans text-sm text-white/45 group-open:hidden">Optional — exclude gold, index only, direct stocks ▾</span></summary>
         <Explain>Leave out anything you do not want; its share is spread over the rest. “Index funds only” swaps active funds for low-cost <Term id="index">index funds</Term>. Direct stocks replace part of the equity funds with a basket from the <a href="/tools/stock-sip" className="underline">Stock SIP builder</a>.</Explain>
         <fieldset className="mt-4"><legend className="mb-2 text-sm text-white/75">Leave out</legend><div className="flex flex-wrap gap-2">{(Object.keys(EXCLUSION_LABELS) as Exclusion[]).map((e) => { const on = (p.exclude || []).includes(e); return <button key={e} type="button" aria-pressed={on} onClick={() => toggleEx(e)} className={chip(on)}>{on ? "✕ " : ""}{EXCLUSION_LABELS[e]}</button>; })}</div><p className="mt-2 text-xs text-white/45">Excluded parts are spread proportionally over the rest of the plan.</p></fieldset>
         <label className="mt-4 flex items-center justify-between gap-3 text-sm text-white/75"><span>Index funds only (no active funds)</span><input type="checkbox" checked={Boolean(p.indexOnly)} onChange={(e) => set("indexOnly", e.target.checked)} className="h-5 w-5 accent-amber-200" /></label>
@@ -115,7 +117,7 @@ export function PlannerClient({ funds, buckets, navDate, picks, stockAsOf }: { f
         <details className="mt-4 rounded-2xl border border-white/10 p-4"><summary className="cursor-pointer text-sm font-semibold text-white/80">Return assumptions (per year, before tax)</summary>
           <div className="mt-4 grid gap-4 sm:grid-cols-3">{(["equity", "debt", "gold"] as const).map((a) => <Num key={a} id={`pl-r-${a}`} label={a[0].toUpperCase() + a.slice(1)} value={Math.round(p.returns[a] * 1000) / 10} onChange={(v) => set("returns", { ...p.returns, [a]: v / 100 })} step={0.5} max={25} suffix="%" hint={ref(a) !== null ? `5y data ${pct(ref(a))}` : undefined} />)}</div>
           <p className="mt-3 text-xs text-white/45">Deliberately conservative long-run assumptions. “5y data” is the median 5-year return of the matching fund group — past returns are not a forecast.</p></details>
-      </Card>
+      </details>
     </div>
 
     <div className="grid gap-6">
