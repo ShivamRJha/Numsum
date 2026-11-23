@@ -32,3 +32,6 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
     </div>
   </main>;
 }
+
+/** Reads live records on every request (data rules differ per collection). */
+export const dynamic = "force-dynamic";

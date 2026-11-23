@@ -16,3 +16,6 @@ async function Directory() {
 export default function Organizations() {
   return <main className="min-h-screen bg-navy px-6 py-10"><h1 className="font-display text-5xl">Organizations</h1><p className="mt-3 text-white/60">Browse public organization profiles loaded from Firestore.</p><div className="mt-6"><Button href="/organizations/dashboard">Organization Dashboard</Button></div><div className="mt-8"><Suspense fallback={<LoadingState label="Loading organizations" />}><Directory /></Suspense></div></main>;
 }
+
+/** Reads live records on every request (data rules differ per collection). */
+export const dynamic = "force-dynamic";

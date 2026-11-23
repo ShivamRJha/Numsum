@@ -78,3 +78,6 @@ export default async function KnowledgeDetail({
     </main>
   );
 }
+
+/** Reads live records on every request (data rules differ per collection). */
+export const dynamic = "force-dynamic";

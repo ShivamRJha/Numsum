@@ -8,3 +8,6 @@ export default async function Community({ searchParams }: { searchParams: Promis
   const threads = rows.filter((t) => (category === "all" || t.category === category) && (!query || `${t.title} ${t.body} ${(t.tags || []).join(" ")}`.toLowerCase().includes(query)) && (!sectorQuery || (t.tags || []).join(" ").toLowerCase().includes(sectorQuery)));
   return <CommunityPageClient threads={threads} category={category} q={q} />;
 }
+
+/** Reads live records on every request (data rules differ per collection). */
+export const dynamic = "force-dynamic";

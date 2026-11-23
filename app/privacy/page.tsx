@@ -47,8 +47,9 @@ export default function PrivacyPage() {
     <h2>7. Grievance Officer</h2>
     <p>Grievance Officer, NumSum Labs — reachable {reach}. Please start your message with “Grievance”.</p>
 
-    <h2>8. Cookies</h2>
-    <p>We use only the storage needed for sign-in and to remember simple preferences. We do not use advertising cookies.</p>
+    <h2 id="cookies">8. Cookies and analytics</h2>
+    <p>We use the storage needed for sign-in and to remember simple preferences (such as light or dark theme). With your consent only, we use Google Analytics through Google Tag Manager to count visits and see which pages and tools are used; it sets analytics cookies and receives your browser details and an approximate location. Until you accept, analytics cookies are not set. We do not use advertising cookies and do not sell data. You can change your choice at any time with “Cookie settings” at the bottom of every page.</p>
+    <p>The engineering calculators run entirely in your browser; the values you type into them are not sent to us.</p>
 
     <h2>9. Children</h2>
     <p>The platform is meant for adults and businesses. We do not knowingly collect data from anyone under 18.</p>

@@ -9,10 +9,13 @@ import { PublicImpactMetricCards } from "@/components/public-impact-metrics";
 import { PublicReviewCarousel } from "@/components/public-review-carousel";
 import { getPublicCaseStudies } from "@/lib/case-studies";
 import { getPublicChallenges } from "@/lib/repositories/firestore";
+import { JsonLd, org } from "@/lib/seo";
+import { siteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "NumSum Labs — MSME Industrial Innovation & Problem Solving Ecosystem",
-  description: "NumSum Labs helps MSMEs identify, structure, and solve industrial challenges through engineering collaboration, research, SOPs, innovation challenges, and pilot validation.",
+  title: "NumSum Labs — Free Inspection Engineering Calculators, IRIS Software & Investing Tools",
+  description: "Free calculators for inspection and plant engineers (ASME VIII, B31.3, API 510/570/653, API 571), IRIS inspection and reliability software, plain-language guides, and long-term SIP investing tools.",
+  alternates: { canonical: "/" },
 };
 
 const personas = [
@@ -36,24 +39,24 @@ async function CaseStudiesPreview() {
 
 export default function Home() {
   return <main className="overflow-hidden bg-[#060504] text-[#fff8ea]">
+    <JsonLd data={[{ "@context": "https://schema.org", ...org, description: "Engineering calculators, IRIS inspection software and investing tools." }, { "@context": "https://schema.org", "@type": "WebSite", name: "NumSum Labs", url: siteUrl, publisher: org }]} />
     <HomeSplash />
     <section className="relative mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl items-center gap-10 px-6 py-12 md:grid-cols-[1.02fr_.98fr] md:py-16 lg:py-20">
       <div className="hero-orb hero-orb-a" /><div className="hero-orb hero-orb-b" />
       <div className="relative z-10 max-w-3xl">
-        <p className="mb-5 inline-flex rounded-full border border-amber-200/20 bg-amber-200/10 px-4 py-2 text-xs font-semibold uppercase tracking-[.22em] text-amber-100/85">MSME-first industrial innovation</p>
-        <h1 className="font-display text-4xl font-bold leading-[1.02] tracking-[-.055em] sm:text-5xl lg:text-6xl">Turn industrial problems into solved challenges.</h1>
-        <p className="mt-6 max-w-2xl text-base leading-7 text-white/70 md:text-lg md:leading-8">NumSum Labs helps MSMEs structure real business problems, connect with experts, run innovation challenges, and track measurable impact.</p>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap"><ProtectedLink href="/submit-problem" className="rounded-full bg-amber-100 px-5 py-3 text-center text-sm font-semibold text-black shadow-[0_18px_60px_rgba(245,158,11,.22)] transition hover:bg-white">Submit Problem</ProtectedLink><Button href="/challenges" variant="secondary">Explore Challenges</Button><Button href="#how-it-works" variant="secondary">See How It Works</Button><Button href="/case-studies" variant="secondary">View Case Studies</Button></div>
+        <p className="mb-5 inline-flex rounded-full border border-amber-200/20 bg-amber-200/10 px-4 py-2 text-xs font-semibold uppercase tracking-[.22em] text-amber-100/85">Engineering · Inspection · Investing</p>
+        <h1 className="font-display text-4xl font-bold leading-[1.02] tracking-[-.055em] sm:text-5xl lg:text-6xl">Practical tools for plant engineers and long-term investors.</h1>
+        <p className="mt-6 max-w-2xl text-base leading-7 text-white/70 md:text-lg md:leading-8">Free code-based calculators for inspection and integrity work, IRIS inspection software for whole plants, and simple SIP planning tools — built by engineers, with every step shown.</p>
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap"><Button href="/engineering">Engineering calculators</Button><Button href="/products/iris" variant="secondary">IRIS software</Button><Button href="/tools" variant="secondary">Investing tools</Button></div>
       </div>
       <div className="relative z-10"><HeroShowcase /></div>
     </section>
 
-    <section className="mx-auto max-w-7xl px-6 py-14"><p className="section-eyebrow">What brings you to NumSum?</p><h2 className="section-title">Choose your path.</h2><div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">{personas.map(([title, benefit, cta, href]) => <Card key={title} className="premium-card flex h-full flex-col"><h3 className="text-xl font-semibold">{title}</h3><p className="mt-3 flex-1 text-sm leading-6 text-white/65">{benefit}</p><Button href={href} variant="secondary" className="mt-5">{cta}</Button></Card>)}</div></section>
-
-    <section className="mx-auto max-w-7xl px-6 py-14"><p className="section-eyebrow">Products &amp; tools</p><h2 className="section-title">Software built from the plant floor.</h2><div className="mt-8 grid gap-5 md:grid-cols-2">
-      <Card className="premium-card flex h-full flex-col"><p className="text-sm font-semibold uppercase tracking-[.18em] text-amber-100/80">IRIS</p><h3 className="mt-3 text-2xl font-semibold tracking-[-.03em]">Inspection &amp; reliability software for process plants</h3><p className="mt-3 flex-1 text-sm leading-6 text-white/65">Statutory inspections, thickness monitoring, RBI (API 581), IBR boilers, lifting equipment, steam traps and observations — on the office PC and offline on site tablets.</p><div className="mt-6 flex flex-wrap gap-3"><Button href="/products/iris">Explore IRIS</Button><Button href="/products/iris#demo" variant="secondary">Book a demo</Button></div></Card>
-      <Card className="premium-card flex h-full flex-col"><p className="text-sm font-semibold uppercase tracking-[.18em] text-amber-100/80">Invest tools</p><h3 className="mt-3 text-2xl font-semibold tracking-[-.03em]">Plan goals, screen funds and stocks, run the checks</h3><p className="mt-3 flex-1 text-sm leading-6 text-white/65">A goal planner, a mutual-fund screener with expense ratios, a Nifty 500 stock screener, a stock analyzer with the standard investor checklist and a portfolio diversification check — on data refreshed every night.</p><div className="mt-6 flex flex-wrap gap-3"><Button href="/tools">Explore the tools</Button><Button href="/tools/stock-analyzer" variant="secondary">Analyse a stock</Button></div></Card>
+    <section className="mx-auto max-w-7xl px-6 py-14"><p className="section-eyebrow">Start here</p><h2 className="section-title">Pick what you came for.</h2><div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+      {[["Engineering tools", "Vessel and pipe thickness, remaining life, hydrotest pressure, steam trap loss and API 571 damage mechanism screening.", "/engineering", "Open the calculators"], ["IRIS software", "Statutory inspections, thickness monitoring, RBI, IBR boilers and steam traps for the whole plant — office PC and offline tablet.", "/products/iris", "Explore IRIS"], ["Investing tools", "Goal planner for monthly SIPs, fund screener with expense ratios, stock checks with a caution flag for overheated stocks.", "/tools", "Plan a goal"], ["Learn", "Short guides: RBI, API 510/570/653, corrosion rate, 69 damage mechanisms, SIPs and investing terms.", "/learn", "Start learning"]].map(([t, d, h, c]) => <Card key={h} className="premium-card flex h-full flex-col"><h3 className="text-xl font-semibold">{t}</h3><p className="mt-3 flex-1 text-sm leading-6 text-white/65">{d}</p><Button href={h} variant="secondary" className="mt-5">{c}</Button></Card>)}
     </div></section>
+
+    <section className="mx-auto max-w-7xl px-6 py-14"><p className="section-eyebrow">For MSMEs and the innovation community</p><h2 className="section-title">Bring a real industrial problem.</h2><div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">{personas.map(([title, benefit, cta, href]) => <Card key={title} className="premium-card flex h-full flex-col"><h3 className="text-xl font-semibold">{title}</h3><p className="mt-3 flex-1 text-sm leading-6 text-white/65">{benefit}</p><Button href={href} variant="secondary" className="mt-5">{cta}</Button></Card>)}</div></section>
 
     <section id="how-it-works" className="mx-auto max-w-7xl px-6 py-14"><p className="section-eyebrow">How NumSum works</p><h2 className="section-title">A disciplined route from issue to outcome.</h2><div className="mt-8 grid gap-4 md:grid-cols-4">{steps.map((step, index) => <Card key={step} className="premium-card relative"><p className="text-sm font-semibold text-amber-100/80">0{index + 1}</p><h3 className="mt-6 text-xl font-semibold">{step}</h3><p className="mt-3 text-sm leading-6 text-white/60">{index === 0 ? "Private intake starts the journey." : index === 1 ? "Review turns noise into scope." : index === 2 ? "The right contributors engage." : "Approved metrics become learning."}</p></Card>)}</div></section>
 
