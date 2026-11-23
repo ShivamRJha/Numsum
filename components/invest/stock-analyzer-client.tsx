@@ -4,11 +4,13 @@ import Link from "next/link";
 import { CheckCircle2, CircleHelp, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Badge, Stat, field, num, pct, signed, tone } from "@/components/invest/kit";
+import { Explain, Term } from "@/components/invest/explain";
 import { StockSearch } from "@/components/invest/stock-search";
 import { ToolHeader } from "@/components/invest/tools-nav";
 import { Card } from "@/components/ui";
 import { inr } from "@/lib/invest/planner";
 import type { Check, Fundamentals, StockStats, Verdict } from "@/lib/invest/stocks";
+import { Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Analysis = {
@@ -16,6 +18,7 @@ type Analysis = {
   stats: StockStats; fundamentals: Fundamentals | null; checks: Check[]; verdict: Verdict;
   indexPe: number | null; industryPe: number | null; screen: { score: number | null; signal: string; rankOf?: number } | null;
   chart: [number, number, number | null, number | null][]; weekly: [number, number][]; indexWeekly: [number, number][]; sources: string[];
+  dataCheck?: { prices: string; priceCheck: string; fundamentals: string };
 };
 
 function PriceChart({ data }: { data: Analysis["chart"] }) {
@@ -111,45 +114,51 @@ export function StockAnalyzerClient({ symbol, universe }: { symbol: string; univ
     <div className="grid gap-6 lg:grid-cols-[1.3fr_.7fr]">
       <Card className="premium-card"><PriceChart data={data.chart} /></Card>
       <Card className={cn("premium-card border", v.label === "Strong" ? "border-emerald-300/40" : v.label === "Positive" ? "border-lime-300/30" : v.label === "Mixed" ? "border-amber-200/30" : "border-red-300/30")}>
-        <p className="text-xs uppercase tracking-[.16em] text-white/50">Checklist signal</p>
+        <p className="text-xs uppercase tracking-[.16em] text-white/50"><Term id="signal">Long-term checklist signal</Term></p>
         <div className="mt-2 flex items-center gap-3"><span className="font-display text-5xl text-white">{v.score}</span><Badge kind={v.label}>{v.label}</Badge></div>
         <p className="mt-3 text-sm leading-6 text-white/75">{v.summary}</p>
         <div className="mt-4 grid gap-2">{Object.entries(v.groups).map(([g, x]) => <div key={g} className="flex items-center justify-between text-sm"><span className="text-white/60">{g}</span><span className="flex items-center gap-2"><span className="h-1.5 w-24 overflow-hidden rounded-full bg-white/10"><span className="block h-full rounded-full bg-amber-200" style={{ width: `${(x.pass / x.total) * 100}%` }} /></span><span className="w-10 text-right text-white/75">{x.pass}/{x.total}</span></span></div>)}</div>
-        <p className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-xs text-white/60">Position-size guide: keep this stock to about <strong className="text-white">{pct(v.maxWeight, 0)}</strong> of your equity portfolio, so a two-standard-deviation year (≈ {pct(2 * (s.vol1y || 0), 0)} fall) costs no more than ~5% overall.</p>
+        <div className={cn("mt-4 rounded-2xl border p-3", v.heat.label === "Overheated" ? "border-red-300/40 bg-red-500/10" : v.heat.label === "Hot" ? "border-orange-300/40 bg-orange-400/10" : "border-white/10 bg-white/[0.03]")}>
+          <div className="flex items-center justify-between gap-2"><span className="flex items-center gap-2 text-sm text-white"><Flame size={16} className={v.heat.label === "Calm" ? "text-emerald-300" : v.heat.label === "Warm" ? "text-amber-200" : "text-red-300"} aria-hidden="true" /><Term id="heat">Risen too much?</Term></span><span className="flex items-center gap-2"><span className="font-mono text-sm text-white/70">{v.heat.score}/100</span><Badge kind={v.heat.label}>{v.heat.label}</Badge></span></div>
+          {v.heat.reasons.length > 0 && <ul className="mt-2 list-disc pl-5 text-xs text-white/65">{v.heat.reasons.map((r) => <li key={r}>{r}</li>)}</ul>}
+          <p className="mt-2 text-xs text-white/70">{v.heat.sip}</p>
+        </div>
+        <p className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-xs text-white/60"><Term id="position">Position-size guide</Term>: keep this stock to about <strong className="text-white">{pct(v.maxWeight, 0)}</strong> of your equity portfolio, so a two-standard-deviation year (≈ {pct(2 * (s.vol1y || 0), 0)} fall) costs no more than ~5% overall.</p>
         {data.screen && <p className="mt-3 text-xs text-white/45">Nifty 500 screener score {data.screen.score ?? "—"} ({data.screen.signal}).</p>}
       </Card>
     </div>
 
     <Card className="premium-card mt-6">
-      <h2 className="font-display text-2xl">Investor checklist</h2>
-      <div className="mt-4 grid gap-5 lg:grid-cols-2">{groups.map(([g, list]) => <div key={g}><p className="mb-2 text-xs font-semibold uppercase tracking-[.18em] text-amber-100/80">{g}</p><ul className="grid gap-2">{list.map((c) => <li key={c.label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3"><div className="flex items-start gap-3">{c.pass === true ? <CheckCircle2 className="mt-0.5 shrink-0 text-emerald-300" size={18} aria-label="Pass" /> : c.pass === false ? <XCircle className="mt-0.5 shrink-0 text-red-300" size={18} aria-label="Fail" /> : <CircleHelp className="mt-0.5 shrink-0 text-white/35" size={18} aria-label="Not available" />}<div className="min-w-0 flex-1"><div className="flex flex-wrap justify-between gap-2 text-sm"><span className="text-white">{c.label}</span><span className="tabular-nums text-white/70">{c.value}</span></div><p className="mt-1 text-xs text-white/45">{c.note}</p></div></div></li>)}</ul></div>)}</div>
+      <h2 className="font-display text-2xl">Long-term investor checklist</h2>
+      <Explain>These are the questions careful investors ask before starting a SIP in a stock: Is it a good business? Is the price fair? How bumpy is the ride? Is the long-term trend up? Has it already run up too much? Can I buy and sell it easily? Green = passes, red = fails, grey = data not available. Tap any underlined term for an explanation.</Explain>
+      <div className="mt-4 grid gap-5 lg:grid-cols-2">{groups.map(([g, list]) => <div key={g}><p className="mb-2 text-xs font-semibold uppercase tracking-[.18em] text-amber-100/80">{g}</p><ul className="grid gap-2">{list.map((c) => <li key={c.label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3"><div className="flex items-start gap-3">{c.pass === true ? <CheckCircle2 className="mt-0.5 shrink-0 text-emerald-300" size={18} aria-label="Pass" /> : c.pass === false ? <XCircle className="mt-0.5 shrink-0 text-red-300" size={18} aria-label="Fail" /> : <CircleHelp className="mt-0.5 shrink-0 text-white/35" size={18} aria-label="Not available" />}<div className="min-w-0 flex-1"><div className="flex flex-wrap justify-between gap-2 text-sm"><span className="text-white">{c.term ? <Term id={c.term}>{c.label}</Term> : c.label}</span><span className="font-mono tabular-nums text-white/70">{c.value}</span></div><p className="mt-1 text-xs text-white/45">{c.note}</p></div></div></li>)}</ul></div>)}</div>
     </Card>
 
     <div className="mt-6 grid gap-6 lg:grid-cols-2">
-      <Card className="premium-card"><h2 className="font-display text-2xl">Returns</h2><div className="mt-4 grid grid-cols-3 gap-3">{([["1 month", s.r1m], ["3 months", s.r3m], ["6 months", s.r6m], ["1 year", s.r1y], ["3y CAGR", s.cagr3], ["5y CAGR", s.cagr5]] as const).map(([l, x]) => <Stat key={l} label={l} value={<span className={tone(x)}>{signed(x)}</span>} />)}</div>
-        {s.rolling1y && <p className="mt-4 text-sm text-white/60">Rolling 1-year returns over 5 years: worst <span className={tone(s.rolling1y.min)}>{pct(s.rolling1y.min, 0)}</span>, median <span className={tone(s.rolling1y.median)}>{pct(s.rolling1y.median, 0)}</span>, best <span className={tone(s.rolling1y.max)}>{pct(s.rolling1y.max, 0)}</span>; positive in {pct(s.rolling1y.positive, 0)} of periods.</p>}</Card>
-      <Card className="premium-card"><h2 className="font-display text-2xl">Risk</h2><div className="mt-4 grid grid-cols-3 gap-3">
-        <Stat label="Volatility (1y)" value={pct(s.vol1y)} hint={`Downside ${pct(s.downVol1y)}`} /><Stat label="Beta vs Nifty" value={num(s.beta1y)} hint={`Correlation ${num(s.corr1y)}`} /><Stat label="Max fall (3y)" value={pct(s.mdd3y, 0)} />
-        <Stat label="1-day VaR (95%)" value={pct(s.var95)} hint="Loss exceeded on 1 day in 20" /><Stat label="Sharpe (1y)" value={num(s.sharpe1y)} hint={`Sortino ${num(s.sortino1y)}`} /><Stat label="Alpha (1y)" value={<span className={tone(s.alpha1y)}>{signed(s.alpha1y)}</span>} hint="vs beta-adjusted Nifty" />
+      <Card className="premium-card"><h2 className="font-display text-2xl">Returns</h2><Explain>How much the share price changed. Returns over 3 and 5 years are shown per year (<Term id="cagr">CAGR</Term>). Dividends are not included.</Explain><div className="mt-4 grid grid-cols-3 gap-3">{([["1 month", s.r1m], ["3 months", s.r3m], ["6 months", s.r6m], ["1 year", s.r1y], ["3y per year", s.cagr3], ["5y per year", s.cagr5]] as const).map(([l, x]) => <Stat key={l} label={l} value={<span className={tone(x)}>{signed(x)}</span>} />)}</div>
+        {s.rolling1y && <p className="mt-4 text-sm text-white/60"><Term id="rolling">Rolling 1-year returns</Term> over 5 years: worst <span className={tone(s.rolling1y.min)}>{pct(s.rolling1y.min, 0)}</span>, median <span className={tone(s.rolling1y.median)}>{pct(s.rolling1y.median, 0)}</span>, best <span className={tone(s.rolling1y.max)}>{pct(s.rolling1y.max, 0)}</span>; positive in {pct(s.rolling1y.positive, 0)} of periods.</p>}</Card>
+      <Card className="premium-card"><h2 className="font-display text-2xl">Risk</h2><Explain>How bumpy the ride has been. Higher volatility and deeper falls mean you need more patience and should put a smaller share of your money here.</Explain><div className="mt-4 grid grid-cols-3 gap-3">
+        <Stat label={<Term id="volatility">Volatility (1y)</Term>} value={pct(s.vol1y)} hint={`Downside ${pct(s.downVol1y)}`} /><Stat label={<Term id="beta">Beta vs Nifty</Term>} value={num(s.beta1y)} hint={`Correlation ${num(s.corr1y)}`} /><Stat label={<Term id="drawdown">Max fall (3y)</Term>} value={pct(s.mdd3y, 0)} />
+        <Stat label={<Term id="var">1-day VaR (95%)</Term>} value={pct(s.var95)} hint="Loss exceeded on 1 day in 20" /><Stat label={<Term id="sharpe">Sharpe (1y)</Term>} value={num(s.sharpe1y)} hint={`Sortino ${num(s.sortino1y)}`} /><Stat label={<Term id="alpha">Alpha (1y)</Term>} value={<span className={tone(s.alpha1y)}>{signed(s.alpha1y)}</span>} hint="vs beta-adjusted Nifty" />
       </div></Card>
-      <Card className="premium-card"><h2 className="font-display text-2xl">Technicals</h2><div className="mt-4 grid grid-cols-3 gap-3">
-        <Stat label="RSI (14)" value={num(s.rsi14, 0)} hint={s.rsi14 === null ? "" : s.rsi14 > 70 ? "Overbought" : s.rsi14 < 30 ? "Oversold" : "Neutral"} /><Stat label="50-day avg" value={`₹${num(s.dma50)}`} /><Stat label="200-day avg" value={`₹${num(s.dma200)}`} />
-        <Stat label="52-week high" value={`₹${num(s.high52)}`} hint={`${pct(s.fromHigh52, 0)} away`} /><Stat label="52-week low" value={`₹${num(s.low52)}`} /><Stat label="Momentum 12-1" value={<span className={tone(s.mom12_1)}>{signed(s.mom12_1)}</span>} />
+      <Card className="premium-card"><h2 className="font-display text-2xl">Price behaviour</h2><Explain>Long-term investors use these only to avoid starting at a bad moment — for example right after a sharp spike — not to trade.</Explain><div className="mt-4 grid grid-cols-3 gap-3">
+        <Stat label={<Term id="rsi">RSI (14)</Term>} value={num(s.rsi14, 0)} hint={s.rsi14 === null ? "" : s.rsi14 > 70 ? "Overbought" : s.rsi14 < 30 ? "Oversold" : "Neutral"} /><Stat label={<Term id="dma">50-day avg</Term>} value={`₹${num(s.dma50)}`} /><Stat label={<Term id="dma">200-day avg</Term>} value={`₹${num(s.dma200)}`} />
+        <Stat label={<Term id="high52">52-week high</Term>} value={`₹${num(s.high52)}`} hint={`${pct(s.fromHigh52, 0)} away`} /><Stat label="52-week low" value={`₹${num(s.low52)}`} /><Stat label={<Term id="momentum">Momentum 12-1</Term>} value={<span className={tone(s.mom12_1)}>{signed(s.mom12_1)}</span>} />
       </div><p className="mt-3 text-xs text-white/45">Traded value ≈ ₹{num(s.valueCr20, 1)} Cr/day · {s.years} years of data{s.splitsAdjusted ? ` · adjusted for ${s.splitsAdjusted} split/bonus` : ""}</p></Card>
-      <Card className="premium-card"><h2 className="font-display text-2xl">Business &amp; valuation</h2>{fu ? <div className="mt-4 grid grid-cols-3 gap-3">
-        <Stat label="P/E" value={fu.pe ? num(fu.pe, 1) : "—"} hint={data.industryPe ? `Industry ${num(data.industryPe, 1)}` : data.indexPe ? `Nifty ${num(data.indexPe, 1)}` : undefined} /><Stat label="Price / book" value={fu.pb ? num(fu.pb, 1) : "—"} /><Stat label="ROE" value={pct(fu.roe)} />
-        <Stat label="Debt / equity" value={num(fu.de)} /><Stat label="Profit margin" value={pct(fu.margin)} /><Stat label="EPS growth" value={<span className={tone(fu.epsGrowth)}>{signed(fu.epsGrowth)}</span>} hint={`Revenue ${signed(fu.revGrowth)}`} />
-        <Stat label="Dividend yield" value={pct(fu.divYield)} /><Stat label="Market cap" value={fu.mcapCr ? `₹${Math.round(fu.mcapCr).toLocaleString("en-IN")} Cr` : "—"} className="col-span-2" />
+      <Card className="premium-card"><h2 className="font-display text-2xl">Business &amp; valuation</h2><Explain>Is this a good business, and is the price sensible for it? These matter most for a SIP you will hold for years.</Explain>{fu ? <div className="mt-4 grid grid-cols-3 gap-3">
+        <Stat label={<Term id="pe">P/E</Term>} value={fu.pe ? num(fu.pe, 1) : "—"} hint={data.industryPe ? `Industry ${num(data.industryPe, 1)}` : data.indexPe ? `Nifty ${num(data.indexPe, 1)}` : undefined} /><Stat label={<Term id="pb">Price / book</Term>} value={fu.pb ? num(fu.pb, 1) : "—"} /><Stat label={<Term id="roe">ROE</Term>} value={pct(fu.roe)} />
+        <Stat label={<Term id="de">Debt / equity</Term>} value={num(fu.de)} /><Stat label={<Term id="margin">Profit margin</Term>} value={pct(fu.margin)} /><Stat label={<Term id="epsgrowth">EPS growth</Term>} value={<span className={tone(fu.epsGrowth)}>{signed(fu.epsGrowth)}</span>} hint={`Revenue ${signed(fu.revGrowth)}`} />
+        <Stat label={<Term id="divyield">Dividend yield</Term>} value={pct(fu.divYield)} /><Stat label={<Term id="mcap">Market cap</Term>} value={fu.mcapCr ? `₹${Math.round(fu.mcapCr).toLocaleString("en-IN")} Cr` : "—"} className="col-span-2" />
       </div> : <p className="mt-4 text-sm text-white/55">Fundamentals are not available right now; the checklist uses price data only. Check the latest results on the NSE or company website.</p>}</Card>
     </div>
 
     <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_.9fr]">
-      <Card className="premium-card"><h2 className="font-display text-2xl">Drawdowns (5 years)</h2><p className="mt-1 text-sm text-white/55">How far the stock was below its previous peak — the pain you would have sat through.</p><div className="mt-3"><DrawdownChart weekly={data.weekly} /></div></Card>
-      <Card className="premium-card"><h2 className="font-display text-2xl">SIP back-test</h2><p className="mt-1 text-sm text-white/55">A monthly investment in this stock vs the Nifty 50 (price only, before dividends and costs).</p>
+      <Card className="premium-card"><h2 className="font-display text-2xl"><Term id="drawdown">Drawdowns</Term> (5 years)</h2><p className="mt-1 text-sm text-white/55">How far the stock was below its previous peak — the pain you would have sat through.</p><div className="mt-3"><DrawdownChart weekly={data.weekly} /></div></Card>
+      <Card className="premium-card"><h2 className="font-display text-2xl"><Term id="sip">SIP</Term> back-test</h2><p className="mt-1 text-sm text-white/55">A monthly investment in this stock vs the Nifty 50 (price only, before dividends and costs).</p>
         <div className="mt-4 grid grid-cols-2 gap-3"><label className="text-sm text-white/75">Monthly amount<input type="number" min={500} step={500} value={sip} onChange={(e) => setSip(Math.max(500, Number(e.target.value) || 500))} className={cn(field, "mt-1.5")} /></label><label className="text-sm text-white/75">Years<select value={years} onChange={(e) => setYears(Number(e.target.value))} className={cn(field, "mt-1.5")}>{[1, 3, 5, 7, 10].map((y) => <option key={y} value={y}>{y}</option>)}</select></label></div>
-        {bt?.stock ? <div className="mt-4 grid grid-cols-2 gap-3"><Stat label={`${data.symbol} SIP`} value={inr(bt.stock.value)} hint={`Invested ${inr(bt.stock.invested)} · XIRR ${pct(bt.stock.xirr)}`} /><Stat label="Nifty 50 SIP" value={bt.nifty ? inr(bt.nifty.value) : "—"} hint={bt.nifty ? `XIRR ${pct(bt.nifty.xirr)}` : ""} /></div> : <p className="mt-4 text-sm text-white/50">Not enough history for {years} years.</p>}
+        {bt?.stock ? <div className="mt-4 grid grid-cols-2 gap-3"><Stat label={`${data.symbol} SIP`} value={inr(bt.stock.value)} hint={<>Invested {inr(bt.stock.invested)} · <Term id="xirr">XIRR</Term> {pct(bt.stock.xirr)}</>} /><Stat label="Nifty 50 SIP" value={bt.nifty ? inr(bt.nifty.value) : "—"} hint={bt.nifty ? `XIRR ${pct(bt.nifty.xirr)}` : ""} /></div> : <p className="mt-4 text-sm text-white/50">Not enough history for {years} years.</p>}
       </Card>
     </div>
-    <p className="mt-6 text-xs text-white/40">Sources: {data.sources.join(" · ")}. Prices are adjusted for detected splits and bonuses; returns exclude dividends.</p>
+    <p className="mt-6 font-mono text-xs text-white/40">Data: {data.sources.join(" · ")}. Prices adjusted for detected splits and bonuses; returns exclude dividends. <a href="/tools/methodology#data-quality" className="underline">How data is checked</a></p>
   </>;
 }

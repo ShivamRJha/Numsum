@@ -6,7 +6,8 @@ import { useCallback, useEffect, useState } from "react";
 import { LoadingState } from "@/components/data-states";
 import { Card } from "@/components/ui";
 import { db } from "@/lib/firebase";
-import { refreshFundsNow, refreshStocksNow } from "@/lib/invest/admin-refresh";
+import { refreshFundsNow, refreshStocksNow, restorePrevious } from "@/lib/invest/admin-refresh";
+import { DataQuality } from "@/components/invest/data-quality";
 import { META_COLLECTION, STATUS_DOC, STOCK_SUMMARY_DOC, SUMMARY_DOC, type FundSummaryDoc, type RefreshStatusDoc, type StockSummaryDoc } from "@/lib/invest/types";
 import { cn } from "@/lib/utils";
 
@@ -46,6 +47,12 @@ export default function AdminMarketDataPage() {
     } finally { setRunning(null); setBar(null); }
   }
 
+  async function restore(kind: "funds" | "stocks") {
+    if (!window.confirm(`Put back the previous ${kind} data? The current version becomes the backup, so you can switch back.`)) return;
+    setError(""); setLog([`Restoring previous ${kind} data…`]);
+    try { await restorePrevious(kind); setLog((l) => [...l, "Restored."]); await load(); } catch (e) { setError(e instanceof Error ? e.message : "Restore failed."); }
+  }
+
   if (loading) return <LoadingState label="Loading market data status" />;
   const card = "text-xs uppercase tracking-[.16em] text-white/50";
   return <div className="space-y-6">
@@ -69,6 +76,8 @@ export default function AdminMarketDataPage() {
       <Card><p className={card}>Stocks</p><p className="mt-2 text-lg text-white">{stocks?.count?.toLocaleString("en-IN") ?? "—"}</p><p className="mt-1 text-xs text-white/45">Prices {stocks?.asOf ?? "—"} · {stocks?.withFundamentals ?? 0} with fundamentals</p></Card>
     </div>
 
+    <div className="grid gap-4 lg:grid-cols-2"><DataQuality title="Funds — data checks" checks={funds?.checks} updatedAt={funds?.updatedAt} /><DataQuality title="Stocks — data checks" checks={stocks?.checks} updatedAt={stocks?.updatedAt} /></div>
+    <div className="flex flex-wrap gap-2 text-sm"><span className="text-white/50">Backups: every refresh keeps the previous version.</span><button type="button" disabled={Boolean(running)} onClick={() => restore("funds")} className="rounded-full border border-white/15 px-3 py-1.5 text-white/75 hover:border-white/40">Restore previous funds</button><button type="button" disabled={Boolean(running)} onClick={() => restore("stocks")} className="rounded-full border border-white/15 px-3 py-1.5 text-white/75 hover:border-white/40">Restore previous stocks</button></div>
     {funds && <Card><div className="flex items-center justify-between"><h2 className="font-display text-2xl">Fund groups</h2><Link href="/tools/funds" className="text-sm text-blue-200 hover:text-white">Open fund screener →</Link></div><div className="mt-4 grid gap-2 text-sm md:grid-cols-3">{Object.values(funds.buckets).map((b) => <div key={b.key} className="flex justify-between rounded-xl border border-white/10 px-3 py-2"><span>{b.label}</span><span className="text-white/55">{b.count}</span></div>)}</div></Card>}
     {stocks && <Card><div className="flex items-center justify-between"><h2 className="font-display text-2xl">Stock industries</h2><Link href="/tools/stocks" className="text-sm text-blue-200 hover:text-white">Open stock screener →</Link></div><div className="mt-4 grid gap-2 text-sm md:grid-cols-3">{Object.entries(stocks.industries).sort((a, b) => b[1].count - a[1].count).map(([k, v]) => <div key={k} className="flex justify-between rounded-xl border border-white/10 px-3 py-2"><span>{k}</span><span className="text-white/55">{v.count} · P/E {v.pe ? v.pe.toFixed(1) : "—"}</span></div>)}</div></Card>}
   </div>;

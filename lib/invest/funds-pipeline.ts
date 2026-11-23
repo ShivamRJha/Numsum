@@ -5,7 +5,7 @@
  */
 import { BUCKETS, BUCKET_BY_KEY, classifyScheme, type FundKind } from "./buckets";
 import { annualVol, cagr, historyYears, maxDrawdown, median, monthEnds, monthKeys, monthlyReturns, percentiles, sortino, std, weighted, type NavPoint } from "./metrics";
-import type { BucketSummary, FundLite, FundRow, FundSummaryDoc } from "./types";
+import type { BucketSummary, DataCheck, FundLite, FundRow, FundSummaryDoc } from "./types";
 
 export type FundCandidate = { code: string; name: string; amc: string; bucket: string; nav: number; navDate: string; ter: number | null };
 
@@ -16,6 +16,8 @@ export type FundStats = FundCandidate & {
   vol3: number | null; mdd5: number | null; sortino3: number | null;
   /** Month-end NAVs for the last ~62 months, [YYYY-MM, nav]. */
   me: [string, number][];
+  /** Latest NAV in the history vs the AMFI file: "agree", "differ" or "unverified" (different dates). */
+  chk?: "agree" | "differ" | "unverified";
 };
 
 /* ----------------------------------------------------------------- AMFI file */
@@ -126,8 +128,10 @@ export function computeFundStats(c: FundCandidate, series: NavPoint[]): FundStat
   const keys37 = monthKeys(latestT, 37);
   const rets = monthlyReturns(me, keys37);
   const r = (x: number | null) => (x === null || !Number.isFinite(x) ? null : Math.round(x * 1e5) / 1e5);
+  const lastIso = new Date(latestT).toISOString().slice(0, 10);
+  const chk: FundStats["chk"] = c.navDate && lastIso === c.navDate ? (Math.abs(series[series.length - 1].nav / c.nav - 1) < 0.005 ? "agree" : "differ") : "unverified";
   return {
-    ...c, latestT, years: Math.round(historyYears(series) * 100) / 100,
+    ...c, chk, latestT, years: Math.round(historyYears(series) * 100) / 100,
     cagr1: r(cagr(series, 1)), cagr3: r(cagr(series, 3)), cagr5: r(cagr(series, 5)),
     vol3: r(annualVol(rets)), mdd5: r(maxDrawdown(series, 5)), sortino3: r(sortino(rets)),
     me: [...me.entries()],
@@ -135,6 +139,21 @@ export function computeFundStats(c: FundCandidate, series: NavPoint[]): FundStat
 }
 
 /* ----------------------------------------------------------------- phase 2 */
+
+/** Data sanity: drop funds whose history disagrees with AMFI or shows impossible returns. */
+export function isSane(f: FundStats) {
+  if (f.chk === "differ") return false;
+  if (f.cagr1 !== null && Math.abs(f.cagr1) > 1.5) return false;
+  if (f.cagr3 !== null && Math.abs(f.cagr3) > 0.8) return false;
+  return true;
+}
+
+/** Re-use the previous expense ratio when today's TER download did not cover a fund. */
+export function fillTerFromPrevious<T extends { code: string; ter: number | null }>(cands: T[], previous: { c: string; t: number | null }[] | undefined): T[] {
+  if (!previous?.length) return cands;
+  const prev = new Map(previous.map((f) => [f.c, f.t]));
+  return cands.map((c) => (c.ter === null && prev.get(c.code) != null ? { ...c, ter: prev.get(c.code) as number } : c));
+}
 
 /** metric, weight, lowerIsBetter. Cost carries the most weight for active funds — the most reliable predictor of net returns. */
 function weightsFor(kind: FundKind, m: Record<string, number | null>): [string, number, boolean][] {
@@ -157,7 +176,7 @@ export function scoreFunds(stats: FundStats[]): { rows: FundRow[]; buckets: Reco
   const buckets: Record<string, BucketSummary> = {};
 
   for (const def of BUCKETS) {
-    const funds = stats.filter((f) => f.bucket === def.key && f.latestT >= latestT - 20 * 864e5);
+    const funds = stats.filter((f) => f.bucket === def.key && f.latestT >= latestT - 20 * 864e5 && isSane(f));
     if (!funds.length) continue;
     const me = funds.map((f) => new Map(f.me));
     const roll = me.map((m) => keys61.map((k, i) => { if (i < 12) return null; const a = m.get(keys61[i - 12]), b = m.get(k); return a && b ? b / a - 1 : null; }));
@@ -210,8 +229,9 @@ export function toLite(r: FundRow): FundLite {
   return { c: r.code, n: r.name, a: r.amc || "", b: r.bucket, s: r.score, r: r.rank, t: r.ter, c1: r.cagr1, c3: r.cagr3, c5: r.cagr5, v: r.vol3, dd: r.mdd5, so: r.sortino3, cs: r.consistency, tr: r.tracking, y: r.years, cf: r.confidence, nav: r.nav };
 }
 
-export function buildFundSummary(rows: FundRow[], buckets: Record<string, BucketSummary>, latestT: number, source: string): FundSummaryDoc {
+export function buildFundSummary(rows: FundRow[], buckets: Record<string, BucketSummary>, latestT: number, source: string, checks: DataCheck[] = []): FundSummaryDoc {
   return {
+    checks,
     version: 2, updatedAt: new Date().toISOString(), navDate: new Date(latestT).toISOString().slice(0, 10), fundCount: rows.length,
     withTer: rows.filter((r) => r.ter !== null).length, source, methodology: FUND_METHODOLOGY, buckets, funds: rows.map(toLite),
   };

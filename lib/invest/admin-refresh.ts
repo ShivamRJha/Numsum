@@ -7,9 +7,10 @@
 import { doc, getDoc, setDoc, writeBatch } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { BUCKET_BY_KEY } from "./buckets";
-import { buildFundSummary, scoreFunds, type FundCandidate, type FundStats } from "./funds-pipeline";
-import { industryMedians, scoreStocks, STOCK_METHODOLOGY, type Fundamentals, type StockStats } from "./stocks";
-import { META_COLLECTION, STATUS_DOC, STOCK_SUMMARY_DOC, SUMMARY_DOC, type RefreshStatusDoc, type StockSummaryDoc } from "./types";
+import { buildFundSummary, fillTerFromPrevious, scoreFunds, type FundCandidate, type FundStats } from "./funds-pipeline";
+import { industryMedians, industryPeFrom, scoreStocks, STOCK_METHODOLOGY, type Fundamentals, type StockStats } from "./stocks";
+import { fundChecks, stockChecks } from "./validation";
+import { META_COLLECTION, STATUS_DOC, STOCK_SUMMARY_DOC, SUMMARY_DOC, type FundSummaryDoc, type RefreshStatusDoc, type StockSummaryDoc } from "./types";
 
 export type Progress = (message: string, done?: number, total?: number) => void;
 
@@ -52,8 +53,24 @@ async function collect<T, R>(items: T[], key: (t: T) => string, rkey: (r: R) => 
   return [...first, ...second];
 }
 
-async function existingCount(id: string, field: "fundCount" | "count") {
-  try { const s = await getDoc(doc(db, META_COLLECTION, id)); return s.exists() ? Number(s.data()[field]) || 0 : 0; } catch { return 0; }
+async function readDoc<T>(id: string): Promise<T | null> {
+  try { const s = await getDoc(doc(db, META_COLLECTION, id)); return s.exists() ? (s.data() as T) : null; } catch { return null; }
+}
+
+/** Saves a new summary, keeping the previous one as `<id>_prev` (one-step backup). */
+async function saveWithBackup(id: string, previous: unknown, next: unknown) {
+  if (previous) await setDoc(doc(db, META_COLLECTION, `${id}_prev`), clean(previous)).catch(() => undefined);
+  await setDoc(doc(db, META_COLLECTION, id), clean(next));
+}
+
+/** Puts the previous version back (undo the last refresh). */
+export async function restorePrevious(kind: "funds" | "stocks") {
+  const id = kind === "funds" ? SUMMARY_DOC : STOCK_SUMMARY_DOC;
+  const [cur, prev] = await Promise.all([readDoc(id), readDoc(`${id}_prev`)]);
+  if (!prev) throw new Error("There is no previous version to restore.");
+  await setDoc(doc(db, META_COLLECTION, id), clean(prev));
+  if (cur) await setDoc(doc(db, META_COLLECTION, `${id}_prev`), clean(cur));
+  await writeStatus({ ok: true, message: `Restored the previous ${kind} data` });
 }
 
 async function writeStatus(patch: Partial<RefreshStatusDoc> & { message: string; ok: boolean }) {
@@ -64,16 +81,19 @@ async function writeStatus(patch: Partial<RefreshStatusDoc> & { message: string;
 export async function refreshFundsNow(progress: Progress) {
   const started = Date.now();
   progress("Downloading today's AMFI scheme list and expense ratios…");
-  const { candidates, source } = await api<{ candidates: FundCandidate[]; source: string }>("/api/market/funds/candidates");
+  const previous = await readDoc<FundSummaryDoc>(SUMMARY_DOC);
+  const fetched = await api<{ candidates: FundCandidate[]; source: string }>("/api/market/funds/candidates");
+  const candidates = fillTerFromPrevious(fetched.candidates, previous?.funds);
+  const source = fetched.source;
   if (candidates.length < 200) throw new Error(`Only ${candidates.length} schemes found in the AMFI file — keeping the current data.`);
   const stats = await collect(candidates, (c) => c.code, (s: FundStats) => s.code, async (chunk) => (await api<{ stats: FundStats[] }>("/api/market/funds/stats", { method: "POST", body: JSON.stringify({ candidates: chunk }) })).stats, "Fetching NAV history", progress, 20);
-  const before = await existingCount(SUMMARY_DOC, "fundCount");
+  const before = previous?.fundCount || 0;
   if (stats.length < 200 || (before && stats.length < before * 0.85)) throw new Error(`Only ${stats.length} funds loaded (the current data has ${before}) — kept the current data. Please try again in a few minutes.`);
   progress("Scoring funds…");
   const { rows, buckets, latestT } = scoreFunds(stats);
-  const summary = buildFundSummary(rows, buckets, latestT, `AMFI daily NAV file, AMFI TER tracker (expense ratios) and NAV history from api.mfapi.in — ${source.split("/").pop()}`);
-  progress("Saving to the database…");
-  await setDoc(doc(db, META_COLLECTION, SUMMARY_DOC), clean(summary));
+  const summary = buildFundSummary(rows, buckets, latestT, `AMFI daily NAV file, AMFI TER tracker (expense ratios) and NAV history from api.mfapi.in — ${source.split("/").pop()}`, fundChecks(candidates, stats, rows.length, before));
+  progress("Saving to the database (previous version kept as a backup)…");
+  await saveWithBackup(SUMMARY_DOC, previous, summary);
   let detail = "";
   try {
     for (let i = 0; i < rows.length; i += 400) {
@@ -95,17 +115,22 @@ export async function refreshStocksNow(progress: Progress) {
   progress("Loading the Nifty 500 list…");
   const { universe, indexPe } = await api<{ universe: [string, string, string][]; indexPe: number | null }>("/api/market/universe");
   const items = await collect(universe.map((u) => u[0]), (s) => s, (x: StockItem) => x.symbol, async (chunk) => (await api<{ items: StockItem[] }>("/api/market/stocks/stats", { method: "POST", body: JSON.stringify({ symbols: chunk }) })).items, "Fetching prices and fundamentals", progress, 15);
-  const before = await existingCount(STOCK_SUMMARY_DOC, "count");
+  const previous = await readDoc<StockSummaryDoc>(STOCK_SUMMARY_DOC);
+  const before = previous?.count || 0;
   if (items.length < 300 || (before && items.length < before * 0.85)) throw new Error(`Only ${items.length} stocks loaded (the current data has ${before}) — kept the current data. Please try again in a few minutes.`);
   const meta = new Map(universe.map((u) => [u[0], u]));
-  const rows = scoreStocks(items.map((x) => ({ stats: x.stats, fu: x.fu, name: meta.get(x.symbol)?.[1] || x.symbol, industry: meta.get(x.symbol)?.[2] || "Other" }))).sort((a, b) => (b.sc ?? -1) - (a.sc ?? -1));
+  const newest = items.map((x) => x.stats.asOf).sort().pop() || "";
+  const fresh = items.filter((x) => Date.parse(newest) - Date.parse(x.stats.asOf) <= 10 * 864e5);
+  const input = fresh.map((x) => ({ stats: x.stats, fu: x.fu, name: meta.get(x.symbol)?.[1] || x.symbol, industry: meta.get(x.symbol)?.[2] || "Other" }));
+  const rows = scoreStocks(input, industryPeFrom(input)).sort((a, b) => (b.sc ?? -1) - (a.sc ?? -1));
   const summary: StockSummaryDoc = {
     version: 1, updatedAt: new Date().toISOString(), asOf: items.map((x) => x.stats.asOf).sort().pop() || "", count: rows.length,
     withFundamentals: rows.filter((r) => r.pe !== null || r.roe !== null).length, indexPe,
     source: "NSE daily prices (eod2 dataset, topped up from Yahoo Finance) and Yahoo Finance fundamentals", methodology: STOCK_METHODOLOGY, industries: industryMedians(rows), rows,
+    checks: stockChecks(universe.length, fresh, rows, before),
   };
-  progress("Saving to the database…");
-  await setDoc(doc(db, META_COLLECTION, STOCK_SUMMARY_DOC), clean(summary));
+  progress("Saving to the database (previous version kept as a backup)…");
+  await saveWithBackup(STOCK_SUMMARY_DOC, previous, summary);
   const msg = `Scored ${rows.length} stocks (${summary.withFundamentals} with fundamentals)`;
   await writeStatus({ ok: true, message: msg, fundCount: 0, stockCount: rows.length, failed: universe.length - items.length, durationSec: Math.round((Date.now() - started) / 1000) });
   progress(msg);

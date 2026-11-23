@@ -1,4 +1,4 @@
-import { fetchBars, fetchIndex, pool, YahooSession } from "@/lib/invest/sources";
+import { fetchBarsChecked, fetchIndex, pool, YahooSession } from "@/lib/invest/sources";
 import { computeStockStats } from "@/lib/invest/stocks";
 import { json, unauthorized, verifyFirebaseUser } from "@/lib/invest/server-auth";
 
@@ -21,9 +21,10 @@ export async function POST(req: Request) {
   const out = await pool(symbols, 6, async (symbol) => {
     if (Date.now() > deadline) return null;
     try {
-      const stats = computeStockStats(symbol, await fetchBars(symbol), index.bars);
-      const fu = stats && yOk ? await yahoo.fundamentals(symbol) : null;
-      return stats ? { symbol, stats, fu } : null;
+      const b = await fetchBarsChecked(symbol);
+      const st = computeStockStats(symbol, b.bars, index.bars);
+      const fu = st && yOk ? await yahoo.fundamentals(symbol) : null;
+      return st ? { symbol, stats: { ...st, check: b.check }, fu } : null;
     } catch { return null; }
   });
   return json({ items: out.filter(Boolean), failed: out.filter((x) => !x).length, yahoo: yOk, indexPe: index.pe });

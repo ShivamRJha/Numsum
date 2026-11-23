@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BarChart3, Gauge, LineChart, PieChart, Target } from "lucide-react";
+import { BarChart3, BookOpen, Gauge, Layers, LineChart, PieChart, Target } from "lucide-react";
 import { ToolHeader } from "@/components/invest/tools-nav";
 import { loadFundSummary, loadStockSummary } from "@/lib/invest/load";
 
@@ -15,6 +15,8 @@ const tools = [
   { href: "/tools/funds", icon: BarChart3, title: "Fund screener & compare", text: "Every direct-plan fund in 24 groups scored on expense ratio, consistency, downside risk and returns. Compare up to four side by side." },
   { href: "/tools/stocks", icon: Gauge, title: "Stock screener", text: "The Nifty 500 scored on trend, risk, quality, valuation and growth against industry peers, with ready-made screens." },
   { href: "/tools/stock-analyzer", icon: LineChart, title: "Stock analyzer", text: "Run the checks investors use before buying: 200-day trend, momentum, RSI, beta, drawdown, Sharpe, ROE, debt and P/E — plus a SIP back-test." },
+  { href: "/tools/stock-sip", icon: Layers, title: "Stock SIP builder", text: "Pick your monthly amount, horizon, risk and style — get a diversified stock basket with reasons, a monthly split and a wait list of stocks that have risen too much." },
+  { href: "/tools/methodology", icon: BookOpen, title: "How it works", text: "Data sources, cross-checks and backups, scoring weights, the heat measure, and every term explained simply and professionally." },
   { href: "/tools/portfolio", icon: PieChart, title: "Portfolio check", text: "Correlation matrix, portfolio volatility, diversification ratio and suggested risk-balanced weights for up to eight stocks." },
 ] as const;
 
@@ -22,7 +24,7 @@ export default async function ToolsHub() {
   const [funds, stocks] = await Promise.all([loadFundSummary(), loadStockSummary()]);
   const d = (iso?: string) => (iso ? new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—");
   return <>
-    <ToolHeader eyebrow="Investment tools" title="Research like a disciplined investor." intro={<p>Plan goals, screen funds and stocks, and run the standard checks before you invest — on data refreshed every night from AMFI and NSE.</p>}>
+    <ToolHeader eyebrow="Investment tools" title="Research like a disciplined investor." intro={<p>Plan goals, screen funds and stocks, and run the standard checks before you invest — built for regular (SIP) investing over a year or more, on data refreshed and cross-checked every night from AMFI and NSE.</p>}>
       <div className="grid grid-cols-2 gap-3 text-sm">
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3"><p className="text-white/45">Funds scored</p><p className="mt-1 text-xl font-semibold">{funds?.fundCount?.toLocaleString("en-IN") ?? "—"}</p><p className="text-xs text-white/40">NAV {d(funds?.navDate)}</p></div>
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3"><p className="text-white/45">Stocks scored</p><p className="mt-1 text-xl font-semibold">{stocks?.count?.toLocaleString("en-IN") ?? "—"}</p><p className="text-xs text-white/40">Prices {d(stocks?.asOf)}</p></div>

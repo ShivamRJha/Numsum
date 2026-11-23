@@ -26,6 +26,14 @@ export type StockStats = {
   rolling1y: { min: number; median: number; max: number; positive: number } | null;
   years: number;
   splitsAdjusted: number;
+  /** Price vs 200-day average, e.g. 0.3 = 30% above. */
+  ext200?: number | null;
+  /** Price vs 52-week low, e.g. 1.0 = doubled from the low. */
+  fromLow52?: number | null;
+  /** Where today's 1-year return sits in this stock's own 5-year history of 1-year returns (0–1). */
+  r1yPctile?: number | null;
+  /** How the price history was verified: "2 sources agree", "single source" or "sources differ". */
+  check?: string;
 };
 
 const DAY = 864e5;
@@ -153,6 +161,8 @@ export function computeStockStats(symbol: string, raw: Bar[], index: Bar[] | nul
   const rolls: number[] = [];
   for (let i = 52; i < wk.length; i++) rolls.push(wk[i][1] / wk[i - 52][1] - 1);
   const rolling1y = rolls.length >= 20 ? { min: Math.min(...rolls), median: median(rolls) as number, max: Math.max(...rolls), positive: rolls.filter((x) => x > 0).length / rolls.length } : null;
+  const r1yPctile = rolls.length >= 52 && r1y !== null ? rolls.filter((x) => x < r1y).length / rolls.length : null;
+  const d200 = sma(bars, 200);
 
   const tail = bars.slice(-20);
   const valueCr20 = tail.length ? tail.reduce((a, b) => a + b.c * b.v, 0) / tail.length / 1e7 : null;
@@ -169,56 +179,101 @@ export function computeStockStats(symbol: string, raw: Bar[], index: Bar[] | nul
     high52: round(high52, 2), low52: round(low52, 2), fromHigh52: round(high52 ? last.c / high52 - 1 : null), mom12_1: round(mom12_1),
     valueCr20: round(valueCr20, 1), rolling1y: rolling1y && { min: round(rolling1y.min) as number, median: round(rolling1y.median) as number, max: round(rolling1y.max) as number, positive: round(rolling1y.positive, 2) as number },
     years: Math.round(((last.t - bars[0].t) / (365.25 * DAY)) * 10) / 10, splitsAdjusted: count,
+    ext200: round(d200 ? last.c / d200 - 1 : null), fromLow52: round(low52 ? last.c / low52 - 1 : null), r1yPctile: round(r1yPctile, 2),
   };
+}
+
+/* ----------------------------------------------------------------- "risen too much" (heat) */
+
+export type Heat = { score: number; label: "Calm" | "Warm" | "Hot" | "Overheated"; reasons: string[]; sip: string };
+
+const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
+
+/**
+ * How stretched the price is after a recent run-up (0 = calm, 100 = overheated). Built for long-term SIP
+ * investors: a great business bought after a near-vertical rise often gives poor returns for years.
+ */
+export function heat(s: StockStats, fu?: Fundamentals | null, industryPe?: number | null): Heat {
+  const parts: [number, number, string | null][] = [];
+  const pc = (x: number) => `${Math.round(x * 100)}%`;
+  if (s.ext200 != null) parts.push([clamp01((s.ext200 - 0.1) / 0.4), 30, s.ext200 > 0.25 ? `${pc(s.ext200)} above its 200-day average` : null]);
+  if (s.r6m != null) parts.push([clamp01((s.r6m - 0.15) / 0.45), 20, s.r6m > 0.35 ? `up ${pc(s.r6m)} in 6 months` : null]);
+  if (s.r1yPctile != null && s.r1y != null) parts.push([s.r1y > 0.25 ? clamp01((s.r1yPctile - 0.6) / 0.4) : 0, 20, s.r1y > 0.25 && s.r1yPctile > 0.9 ? `1-year gain (${pc(s.r1y)}) is in the top 10% of its own history` : null]);
+  if (s.rsi14 != null) parts.push([clamp01((s.rsi14 - 60) / 20), 15, s.rsi14 > 70 ? `RSI ${Math.round(s.rsi14)} (overbought)` : null]);
+  if (s.fromLow52 != null) parts.push([clamp01((s.fromLow52 - 0.5) / 1.0), 15, s.fromLow52 > 1 ? `${pc(s.fromLow52)} above its 52-week low` : null]);
+  const w = parts.reduce((a, x) => a + x[1], 0) || 1;
+  let score = (parts.reduce((a, x) => a + x[0] * x[1], 0) / w) * 100;
+  const reasons = parts.map((x) => x[2]).filter((x): x is string => Boolean(x));
+  if (fu?.pe && industryPe && fu.pe > 2 * industryPe) { score += 10; reasons.push(`P/E ${fu.pe.toFixed(0)} is over twice its industry (${industryPe.toFixed(0)})`); }
+  // A near-vertical run is "Hot" at least, whatever the other measures say
+  if ((s.r6m != null && s.r6m > 0.6) || (s.r1y != null && s.r1y > 1)) score = Math.max(score, 55);
+  if ((s.r6m != null && s.r6m > 1) || (s.ext200 != null && s.ext200 > 0.6)) score = Math.max(score, 75);
+  score = Math.round(Math.min(100, score));
+  const label: Heat["label"] = score >= 75 ? "Overheated" : score >= 55 ? "Hot" : score >= 30 ? "Warm" : "Calm";
+  const sip = label === "Overheated" ? "Avoid lump sums. If you like the business, keep the SIP small and wait for the price to cool towards its 200-day average before adding more."
+    : label === "Hot" ? "Prefer a slow start: spread purchases over 6–12 months instead of investing a large amount now."
+      : label === "Warm" ? "A normal SIP is fine; avoid adding large one-time amounts after sharp jumps."
+        : "No sign of a recent price spike — a regular SIP fits.";
+  return { score, label, reasons, sip };
 }
 
 /* ----------------------------------------------------------------- investor checklist */
 
-export type Check = { group: "Trend" | "Risk" | "Quality" | "Valuation" | "Liquidity"; label: string; value: string; pass: boolean | null; note: string };
+export type CheckGroup = "Business quality" | "Valuation" | "Risk" | "Long-term trend" | "Entry timing" | "Liquidity";
+export type Check = { group: CheckGroup; label: string; value: string; pass: boolean | null; note: string; term?: string };
 
 const p = (x: number | null | undefined, d = 1) => (x === null || x === undefined ? "—" : `${(x * 100).toFixed(d)}%`);
 const f = (x: number | null | undefined, d = 2) => (x === null || x === undefined ? "—" : x.toFixed(d));
 
-/** The standard pre-investment checks, each with a plain-language reason. `indexPe` = Nifty 50 P/E for context. */
+/**
+ * The standard checks long-term (1 year +) SIP investors run before buying a stock, each with a plain reason.
+ * `term` links to the glossary entry that explains the measure.
+ */
 export function investorChecks(s: StockStats, fu: Fundamentals | null, ctx: { indexPe?: number | null; industryPe?: number | null; financial?: boolean } = {}): Check[] {
   const pe = fu?.pe ?? null, benchPe = ctx.industryPe ?? ctx.indexPe ?? null;
+  const peg = pe && fu?.epsGrowth && fu.epsGrowth > 0 ? pe / (fu.epsGrowth * 100) : null;
   return [
-    { group: "Trend", label: "Price above 200-day average", value: s.dma200 ? `${f(s.price)} vs ${f(s.dma200)}` : "—", pass: s.dma200 ? s.price > s.dma200 : null, note: "Long-term uptrend; most trend-following studies use the 200-day line." },
-    { group: "Trend", label: "50-day average above 200-day", value: s.dma50 && s.dma200 ? `${f(s.dma50)} vs ${f(s.dma200)}` : "—", pass: s.dma50 && s.dma200 ? s.dma50 > s.dma200 : null, note: "A “golden cross” setup; below it is a “death cross”." },
-    { group: "Trend", label: "12-month momentum (skip last month) positive", value: p(s.mom12_1), pass: s.mom12_1 === null ? null : s.mom12_1 > 0, note: "Stocks that rose over the past year tend to keep outperforming for a few months." },
-    { group: "Trend", label: "RSI(14) between 30 and 70", value: f(s.rsi14, 0), pass: s.rsi14 === null ? null : s.rsi14 >= 30 && s.rsi14 <= 70, note: "Above 70 is overbought (wait for a pullback); below 30 is oversold." },
-    { group: "Trend", label: "Within 25% of 52-week high", value: p(s.fromHigh52), pass: s.fromHigh52 === null ? null : s.fromHigh52 > -0.25, note: "Deep falls from the high often signal a broken story." },
-    { group: "Risk", label: "Annual volatility below 35%", value: p(s.vol1y), pass: s.vol1y === null ? null : s.vol1y < 0.35, note: "Higher volatility means larger swings and smaller safe position sizes." },
-    { group: "Risk", label: "Beta below 1.2", value: f(s.beta1y), pass: s.beta1y === null ? null : s.beta1y < 1.2, note: "Beta > 1 moves more than the Nifty in both directions." },
-    { group: "Risk", label: "3-year max drawdown better than −40%", value: p(s.mdd3y, 0), pass: s.mdd3y === null ? null : s.mdd3y > -0.4, note: "The worst fall you would have sat through recently." },
-    { group: "Risk", label: "Sharpe ratio (1y) above 0.5", value: f(s.sharpe1y), pass: s.sharpe1y === null ? null : s.sharpe1y > 0.5, note: "Return above the risk-free rate per unit of risk." },
-    { group: "Quality", label: "Return on equity above 15%", value: fu?.roe != null ? p(fu.roe) : "—", pass: fu?.roe == null ? null : fu.roe > 0.15, note: "How efficiently the company turns shareholders' money into profit." },
-    { group: "Quality", label: ctx.financial ? "Debt / equity (not used for lenders)" : "Debt / equity below 1", value: fu?.de != null ? f(fu.de) : "—", pass: ctx.financial || fu?.de == null ? null : fu.de < 1, note: "High leverage magnifies bad years. Banks and NBFCs are judged on asset quality instead." },
-    { group: "Quality", label: "Profit margin positive and growing earnings", value: fu?.margin != null ? `${p(fu.margin)} margin · EPS ${p(fu.epsGrowth)}` : "—", pass: fu?.margin == null ? null : fu.margin > 0 && (fu.epsGrowth == null || fu.epsGrowth > 0), note: "Profitable and still growing." },
-    { group: "Valuation", label: benchPe ? `P/E below 1.5× ${ctx.industryPe ? "industry" : "Nifty"} P/E` : "P/E available", value: pe != null ? `${f(pe, 1)}${benchPe ? ` vs ${f(benchPe, 1)}` : ""}` : "—", pass: pe == null || !benchPe ? null : pe > 0 && pe < benchPe * 1.5, note: "Paying far above the market or peers needs exceptional growth to justify it." },
-    { group: "Valuation", label: "Price / book below 6", value: fu?.pb != null ? f(fu.pb, 1) : "—", pass: fu?.pb == null ? null : fu.pb > 0 && fu.pb < 6, note: "A rough check against paying too much for the balance sheet." },
-    { group: "Liquidity", label: "Average traded value above ₹5 crore/day", value: s.valueCr20 != null ? `₹${f(s.valueCr20, 1)} Cr` : "—", pass: s.valueCr20 == null ? null : s.valueCr20 > 5, note: "Thinly traded stocks can be hard to sell at a fair price." },
+    { group: "Business quality", term: "roe", label: "Return on equity above 15%", value: fu?.roe != null ? p(fu.roe) : "—", pass: fu?.roe == null ? null : fu.roe > 0.15, note: "How much profit the company makes on shareholders' money. Consistently above 15% usually means a strong business." },
+    { group: "Business quality", term: "de", label: ctx.financial ? "Debt / equity (not used for banks & lenders)" : "Debt / equity below 1", value: fu?.de != null ? f(fu.de) : "—", pass: ctx.financial || fu?.de == null ? null : fu.de < 1, note: "Borrowing magnifies bad years. Lenders borrow by design, so they are judged on asset quality instead." },
+    { group: "Business quality", term: "margin", label: "Profitable, with earnings growing", value: fu?.margin != null ? `${p(fu.margin)} margin · EPS ${p(fu.epsGrowth)}` : "—", pass: fu?.margin == null ? null : fu.margin > 0 && (fu.epsGrowth == null || fu.epsGrowth > 0), note: "A business that earns money and is still growing its earnings." },
+    { group: "Business quality", term: "revgrowth", label: "Revenue growing", value: p(fu?.revGrowth), pass: fu?.revGrowth == null ? null : fu.revGrowth > 0, note: "Sales growth is the engine of long-term earnings growth." },
+    { group: "Valuation", term: "pe", label: benchPe ? `P/E below 1.5× ${ctx.industryPe ? "industry" : "Nifty"} P/E` : "P/E available", value: pe != null ? `${f(pe, 1)}${benchPe ? ` vs ${f(benchPe, 1)}` : ""}` : "—", pass: pe == null || !benchPe ? null : pe > 0 && pe < benchPe * 1.5, note: "Price paid for each ₹1 of yearly profit. Paying far above peers needs exceptional growth to work out." },
+    { group: "Valuation", term: "peg", label: "PEG ratio below 2", value: peg != null ? f(peg, 1) : "—", pass: peg == null ? null : peg < 2, note: "P/E divided by earnings growth. Below 1–2 means the price is reasonable for the growth on offer." },
+    { group: "Valuation", term: "pb", label: "Price / book below 6", value: fu?.pb != null ? f(fu.pb, 1) : "—", pass: fu?.pb == null ? null : fu.pb > 0 && fu.pb < 6, note: "A rough check against paying too much for the company's net assets." },
+    { group: "Risk", term: "volatility", label: "Yearly volatility below 35%", value: p(s.vol1y), pass: s.vol1y === null ? null : s.vol1y < 0.35, note: "How much the price swings in a typical year. Higher swings test patience and call for a smaller share of your money." },
+    { group: "Risk", term: "beta", label: "Beta below 1.2", value: f(s.beta1y), pass: s.beta1y === null ? null : s.beta1y < 1.2, note: "Beta 1.2 means the stock tends to move 1.2× as much as the Nifty, up and down." },
+    { group: "Risk", term: "drawdown", label: "Worst fall in 3 years better than −40%", value: p(s.mdd3y, 0), pass: s.mdd3y === null ? null : s.mdd3y > -0.4, note: "The deepest peak-to-bottom fall you would have sat through recently." },
+    { group: "Risk", term: "rolling", label: "Positive in at least 60% of 1-year periods", value: s.rolling1y ? p(s.rolling1y.positive, 0) : "—", pass: s.rolling1y ? s.rolling1y.positive >= 0.6 : null, note: "Over the last 5 years, how often a one-year holding would have made money." },
+    { group: "Long-term trend", term: "cagr", label: "3-year return positive", value: p(s.cagr3), pass: s.cagr3 === null ? null : s.cagr3 > 0, note: "The share price has grown over a full market cycle, not just recently." },
+    { group: "Long-term trend", term: "dma", label: "Price above its 200-day average", value: s.dma200 ? `${f(s.price)} vs ${f(s.dma200)}` : "—", pass: s.dma200 ? s.price > s.dma200 : null, note: "The long-term trend is up. Many long-term investors avoid starting while a stock is in a downtrend." },
+    { group: "Entry timing", term: "heat", label: "Not stretched above its 200-day average (< 25%)", value: p(s.ext200, 0), pass: s.ext200 == null ? null : s.ext200 < 0.25, note: "Prices far above their long-term average tend to cool off. Buying then often means waiting years to make money." },
+    { group: "Entry timing", term: "heat", label: "6-month gain below 40%", value: p(s.r6m, 0), pass: s.r6m == null ? null : s.r6m < 0.4, note: "A very sharp recent rise is a reason for caution, not excitement." },
+    { group: "Entry timing", term: "rsi", label: "RSI below 70 (not overbought)", value: f(s.rsi14, 0), pass: s.rsi14 === null ? null : s.rsi14 < 70, note: "RSI above 70 means buyers have pushed the price up very fast; a pause or pullback is common." },
+    { group: "Liquidity", term: "liquidity", label: "Traded value above ₹5 crore a day", value: s.valueCr20 != null ? `₹${f(s.valueCr20, 1)} Cr` : "—", pass: s.valueCr20 == null ? null : s.valueCr20 > 5, note: "Thinly traded stocks can be hard to buy or sell at a fair price." },
   ];
 }
 
-export type Verdict = { label: "Strong" | "Positive" | "Mixed" | "Weak"; score: number; summary: string; maxWeight: number; groups: Record<string, { pass: number; total: number }> };
+export type Verdict = { label: "Strong" | "Positive" | "Mixed" | "Weak"; score: number; summary: string; maxWeight: number; groups: Record<string, { pass: number; total: number }>; heat: Heat };
 
-export function verdict(checks: Check[], s: StockStats): Verdict {
+const GROUP_WEIGHTS: Record<CheckGroup, number> = { "Business quality": 30, Valuation: 20, Risk: 20, "Long-term trend": 15, "Entry timing": 10, Liquidity: 5 };
+
+export function verdict(checks: Check[], s: StockStats, h: Heat = heat(s)): Verdict {
   const groups: Verdict["groups"] = {};
   for (const c of checks) { if (c.pass === null) continue; groups[c.group] ||= { pass: 0, total: 0 }; groups[c.group].total++; if (c.pass) groups[c.group].pass++; }
-  const W: Record<string, number> = { Trend: 30, Risk: 25, Quality: 25, Valuation: 15, Liquidity: 5 };
-  const { score } = weighted(Object.entries(groups).map(([g, v]) => [v.total ? (v.pass / v.total) * 100 : null, W[g]]));
-  const sc = Math.round(score ?? 50);
-  const label: Verdict["label"] = sc >= 75 ? "Strong" : sc >= 60 ? "Positive" : sc >= 40 ? "Mixed" : "Weak";
-  const trend = groups.Trend ? groups.Trend.pass / groups.Trend.total : 0.5;
-  const quality = groups.Quality ? groups.Quality.pass / groups.Quality.total : null;
-  const summary = label === "Strong" ? "Most checks pass: an established uptrend with acceptable risk" + (quality !== null && quality >= 0.67 ? " and good business quality." : ".") + " If it fits your plan, staggered buying (SIP-style) limits timing risk."
-    : label === "Positive" ? `More checks pass than fail. ${trend < 0.5 ? "The trend is weak — waiting for the price to reclaim its 200-day average is a common discipline." : "Watch the failing checks before adding a large position."}`
-      : label === "Mixed" ? "Signals conflict. Study the failing checks; many investors would keep any position small or wait."
-        : "Most checks fail. Investors following these rules would avoid or exit until trend and fundamentals improve.";
-  // Volatility-based position cap: aim for a stock's 1-year 2-sigma fall to cost ≤ ~5% of the equity portfolio
-  const maxWeight = s.vol1y ? Math.max(0.02, Math.min(0.15, 0.05 / (2 * s.vol1y) * 1.0)) : 0.05;
-  return { label, score: sc, summary, maxWeight: Math.round(maxWeight * 100) / 100, groups };
+  const { score } = weighted(Object.entries(groups).map(([g, v]) => [v.total ? (v.pass / v.total) * 100 : null, GROUP_WEIGHTS[g as CheckGroup]]));
+  let sc = Math.round(score ?? 50);
+  if (h.score > 50) sc = Math.round(sc - (h.score - 50) * 0.3); // risen-too-much penalty
+  let label: Verdict["label"] = sc >= 75 ? "Strong" : sc >= 60 ? "Positive" : sc >= 40 ? "Mixed" : "Weak";
+  if (h.label === "Overheated" && (label === "Strong" || label === "Positive")) label = "Mixed";
+  const quality = groups["Business quality"] ? groups["Business quality"].pass / groups["Business quality"].total : null;
+  const base = label === "Strong" ? `Most long-term checks pass${quality !== null && quality >= 0.75 ? ", including business quality" : ""}. Suitable for a steady monthly SIP held for at least a year.`
+    : label === "Positive" ? "More checks pass than fail. A modest SIP is reasonable; review the failing checks first."
+      : label === "Mixed" ? (h.label === "Overheated" ? "The business may be fine, but the price has run up too far, too fast." : "Signals conflict. Keep any SIP small or wait until the failing checks improve.")
+        : "Most long-term checks fail. Investors following these rules would wait.";
+  const summary = `${base} ${h.label === "Calm" ? "" : h.sip}`.trim();
+  // Volatility-based position cap: a two-standard-deviation bad year should cost ≤ ~5% of the equity portfolio
+  const maxWeight = s.vol1y ? Math.max(0.02, Math.min(0.15, 0.05 / (2 * s.vol1y))) : 0.05;
+  return { label, score: Math.max(0, sc), summary, maxWeight: Math.round(maxWeight * 100) / 100, groups, heat: h };
 }
 
 /* ----------------------------------------------------------------- screener scoring */
@@ -226,16 +281,26 @@ export function verdict(checks: Check[], s: StockStats): Verdict {
 export type StockLite = {
   s: string; n: string; i: string; // symbol, name, industry
   px: number; d: string; // price, as-of date
-  r1: number | null; r3m: number | null; c3: number | null; c5: number | null;
-  v: number | null; b: number | null; dd: number | null; sh: number | null; m: number | null; h: number | null; rsi: number | null; tr: number | null; // trend: price / 200-dma − 1
+  r1: number | null; r3m: number | null; r6?: number | null; c3: number | null; c5: number | null;
+  v: number | null; b: number | null; dd: number | null; sh: number | null; m: number | null; h: number | null; rsi: number | null; tr: number | null; // tr: price vs 200-day average
   liq: number | null; pe: number | null; pb: number | null; roe: number | null; de: number | null; dy: number | null; eg: number | null; mc: number | null;
+  rg?: number | null; mg?: number | null; pos?: number | null; // revenue growth, margin, share of positive 1-year periods
   sc: number | null; sig: string; cov: number;
+  ht?: number; hl?: Heat["label"]; // heat score and label
+  pl?: { q: number | null; v: number | null; r: number | null; t: number | null; g: number | null }; // pillar scores 0–100
+  ck?: string; // price cross-check
 };
 
 const FIN = /financial|bank|nbfc|insurance/i;
 
-/** Peer-relative stock score (0–100) with five pillars; valuation and quality compare within the industry. */
-export function scoreStocks(items: { stats: StockStats; fu: Fundamentals | null; name: string; industry: string }[]): StockLite[] {
+/** Pillar weights for long-term (1 year +) SIP investing. */
+export const STOCK_PILLARS = { q: ["Business quality", 30], v: ["Valuation", 25], r: ["Risk", 20], t: ["Long-term trend", 15], g: ["Growth", 10] } as const;
+
+/**
+ * Peer-relative stock score (0–100) for long-term SIP investors. Quality and valuation are compared within the
+ * industry; a stock that has risen too far, too fast ("heat") loses points and cannot be rated above Neutral.
+ */
+export function scoreStocks(items: { stats: StockStats; fu: Fundamentals | null; name: string; industry: string }[], industryPe: Record<string, number | null> = {}): StockLite[] {
   const col = (fn: (x: (typeof items)[number]) => number | null | undefined) => items.map((x) => { const v = fn(x); return v === undefined || v === null || !Number.isFinite(v) ? null : v; });
   const byIndustry = (vals: (number | null)[], lower: boolean) => {
     const out: (number | null)[] = items.map(() => null);
@@ -245,34 +310,44 @@ export function scoreStocks(items: { stats: StockStats; fu: Fundamentals | null;
       const pc = idx.length >= 4 ? percentiles(idx.map((i) => vals[i]), lower) : idx.map(() => null);
       idx.forEach((i, k) => (out[i] = pc[k]));
     }
-    // Fall back to the whole universe for small industries
     const all = percentiles(vals, lower);
     return out.map((v, i) => (v === null ? all[i] : v));
   };
-  const trend = col((x) => (x.stats.dma200 ? x.stats.price / x.stats.dma200 - 1 : null));
+  const ext = col((x) => x.stats.ext200 ?? (x.stats.dma200 ? x.stats.price / x.stats.dma200 - 1 : null));
+  // Long-term trend rewards being above the 200-day line up to +20%; beyond that there is no extra credit.
+  const trendCapped = ext.map((e) => (e === null ? null : Math.min(e, 0.2)));
   const pc = {
-    trend: percentiles(trend), mom: percentiles(col((x) => x.stats.mom12_1)), high: percentiles(col((x) => x.stats.fromHigh52)),
+    trend: percentiles(trendCapped), c3: percentiles(col((x) => x.stats.cagr3)), pos: percentiles(col((x) => x.stats.rolling1y?.positive)),
     vol: percentiles(col((x) => x.stats.vol1y), true), dd: percentiles(col((x) => x.stats.mdd3y)), beta: percentiles(col((x) => x.stats.beta1y), true),
     roe: byIndustry(col((x) => x.fu?.roe), false), de: byIndustry(col((x) => (FIN.test(x.industry) ? null : x.fu?.de)), true), margin: byIndustry(col((x) => x.fu?.margin), false),
     pe: byIndustry(col((x) => (x.fu?.pe && x.fu.pe > 0 ? x.fu.pe : null)), true), pb: byIndustry(col((x) => (x.fu?.pb && x.fu.pb > 0 ? x.fu.pb : null)), true),
     rg: percentiles(col((x) => x.fu?.revGrowth)), eg: percentiles(col((x) => x.fu?.epsGrowth)),
   };
   return items.map((x, i) => {
-    const pillar = (parts: [number | null, number][]) => weighted(parts).score;
-    const pillars: [number | null, number][] = [
-      [pillar([[pc.trend[i], 40], [pc.mom[i], 35], [pc.high[i], 25]]), 25],
-      [pillar([[pc.vol[i], 40], [pc.dd[i], 35], [pc.beta[i], 25]]), 20],
-      [pillar([[pc.roe[i], 45], [pc.de[i], 25], [pc.margin[i], 30]]), 25],
-      [pillar([[pc.pe[i], 65], [pc.pb[i], 35]]), 20],
-      [pillar([[pc.rg[i], 50], [pc.eg[i], 50]]), 10],
-    ];
-    const { score, coverage } = weighted(pillars);
-    const liq = x.stats.valueCr20;
+    const pillar = (parts: [number | null, number][]) => { const w = weighted(parts).score; return w === null ? null : Math.round(w); };
+    const pl = {
+      q: pillar([[pc.roe[i], 45], [pc.de[i], 25], [pc.margin[i], 30]]),
+      v: pillar([[pc.pe[i], 65], [pc.pb[i], 35]]),
+      r: pillar([[pc.vol[i], 35], [pc.dd[i], 35], [pc.beta[i], 30]]),
+      t: pillar([[pc.c3[i], 40], [pc.trend[i], 30], [pc.pos[i], 30]]),
+      g: pillar([[pc.rg[i], 50], [pc.eg[i], 50]]),
+    };
+    const { score, coverage } = weighted((Object.keys(STOCK_PILLARS) as (keyof typeof pl)[]).map((k) => [pl[k], STOCK_PILLARS[k][1]]));
+    const st = x.stats, fu = x.fu;
+    const h = heat(st, fu, industryPe[x.industry] ?? null);
+    const liq = st.valueCr20;
     let sc = score === null ? null : 50 + (score - 50) * Math.min(1, coverage / 0.75);
+    if (sc !== null && h.score > 50) sc -= (h.score - 50) * 0.4; // risen too much, too fast
     if (sc !== null && liq !== null && liq < 1) sc = Math.min(sc, 45); // illiquid names cannot rank as strong
-    const sig = sc === null ? "—" : sc >= 70 ? "Strong" : sc >= 57 ? "Positive" : sc >= 43 ? "Neutral" : "Weak";
-    const s = x.stats, fu = x.fu;
-    return { s: s.symbol, n: fu?.name || x.name, i: x.industry, px: s.price, d: s.asOf, r1: s.r1y, r3m: s.r3m, c3: s.cagr3, c5: s.cagr5, v: s.vol1y, b: s.beta1y, dd: s.mdd3y, sh: s.sharpe1y, m: s.mom12_1, h: s.fromHigh52, rsi: s.rsi14, tr: trend[i], liq, pe: fu?.pe ?? null, pb: fu?.pb ?? null, roe: fu?.roe ?? null, de: fu?.de ?? null, dy: fu?.divYield ?? null, eg: fu?.epsGrowth ?? null, mc: fu?.mcapCr ?? null, sc: sc === null ? null : Math.round(sc), sig, cov: Math.round(coverage * 100) / 100 };
+    let sig = sc === null ? "—" : sc >= 70 ? "Strong" : sc >= 57 ? "Positive" : sc >= 43 ? "Neutral" : "Weak";
+    if (h.label === "Overheated" && (sig === "Strong" || sig === "Positive")) sig = "Neutral";
+    return {
+      s: st.symbol, n: fu?.name || x.name, i: x.industry, px: st.price, d: st.asOf, r1: st.r1y, r3m: st.r3m, r6: st.r6m, c3: st.cagr3, c5: st.cagr5,
+      v: st.vol1y, b: st.beta1y, dd: st.mdd3y, sh: st.sharpe1y, m: st.mom12_1, h: st.fromHigh52, rsi: st.rsi14, tr: ext[i], liq,
+      pe: fu?.pe ?? null, pb: fu?.pb ?? null, roe: fu?.roe ?? null, de: fu?.de ?? null, dy: fu?.divYield ?? null, eg: fu?.epsGrowth ?? null, mc: fu?.mcapCr ?? null,
+      rg: fu?.revGrowth ?? null, mg: fu?.margin ?? null, pos: st.rolling1y?.positive ?? null,
+      sc: sc === null ? null : Math.max(0, Math.round(sc)), sig, cov: Math.round(coverage * 100) / 100, ht: h.score, hl: h.label, pl, ck: st.check,
+    };
   });
 }
 
@@ -284,7 +359,7 @@ export function industryMedians(rows: StockLite[]) {
   return out;
 }
 
-export const STOCK_METHODOLOGY = "Each stock is scored 0–100 against the Nifty 500: trend & momentum 25 (price vs 200-day average, 12-1 month momentum, distance from 52-week high), risk 20 (volatility, 3-year drawdown, beta), quality 25 (ROE, debt/equity, margin — vs industry peers), valuation 20 (P/E and P/B vs industry peers) and growth 10. Thin data is pulled toward 50 and stocks trading under ₹1 crore a day are capped at 45.";
+export const STOCK_METHODOLOGY = "Built for long-term (1 year +) SIP investing. Each stock is scored 0–100 against the Nifty 500 on five pillars: business quality 30 (ROE, debt/equity, margin — vs industry peers), valuation 25 (P/E and P/B vs industry peers), risk 20 (volatility, 3-year worst fall, beta), long-term trend 15 (3-year return, price vs 200-day average capped at +20%, share of positive 1-year periods) and growth 10 (revenue and earnings growth). Stocks that have risen too far, too fast lose up to 20 points and cannot be rated above Neutral. Thin data is pulled toward 50; stocks trading under ₹1 crore a day are capped at 45.";
 
 export function isFinancial(industry: string) { return FIN.test(industry); }
 
@@ -308,4 +383,19 @@ export function portfolioStats(series: { symbol: string; weekly: [number, number
   const pr = (ws: number[]) => ws.reduce((a, wi, i) => a + wi * annRet[i], 0);
   const wVol = w.reduce((a, wi, i) => a + wi * vol[i], 0);
   return { weeks: T, vol, corr, annRet, equal: { weights: w, vol: pv(w), ret: pr(w), diversification: wVol ? wVol / pv(w) : 1 }, inverseVol: { weights: invW, vol: pv(invW), ret: pr(invW) } };
+}
+
+/** Median positive P/E per industry from raw fundamentals (used before scoring). */
+export function industryPeFrom(items: { fu: Fundamentals | null; industry: string }[]): Record<string, number | null> {
+  const m = new Map<string, number[]>();
+  for (const x of items) if (x.fu?.pe && x.fu.pe > 0) m.set(x.industry, [...(m.get(x.industry) || []), x.fu.pe]);
+  return Object.fromEntries([...m].map(([k, v]) => [k, median(v)]));
+}
+
+/** Compare two price series on overlapping dates. */
+export function crossCheck(a: Bar[], b: Bar[]): "2 sources agree" | "sources differ" | "single source" {
+  const bm = new Map(b.map((x) => [x.t, x.c]));
+  const diffs = a.filter((x) => bm.has(x.t)).slice(-10).map((x) => Math.abs(x.c / (bm.get(x.t) as number) - 1));
+  if (diffs.length < 2) return "single source";
+  return (median(diffs) as number) < 0.01 ? "2 sources agree" : "sources differ";
 }
