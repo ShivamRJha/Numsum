@@ -123,7 +123,7 @@ export function StockAnalyzerClient({ symbol, universe }: { symbol: string; univ
           {v.heat.reasons.length > 0 && <ul className="mt-2 list-disc pl-5 text-xs text-white/65">{v.heat.reasons.map((r) => <li key={r}>{r}</li>)}</ul>}
           <p className="mt-2 text-xs text-white/70">{v.heat.sip}</p>
         </div>
-        <p className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-xs text-white/60"><Term id="position">Position-size guide</Term>: keep this stock to about <strong className="text-white">{pct(v.maxWeight, 0)}</strong> of your equity portfolio, so a two-standard-deviation year (≈ {pct(2 * (s.vol1y || 0), 0)} fall) costs no more than ~5% overall.</p>
+        <p className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-xs text-white/60"><Term id="position">Position-size guide</Term>: keep this stock to about <strong className="text-white">{pct(v.maxWeight, 0)}</strong> of your stock money, so even a very bad year — about twice its usual yearly swing of {pct(s.vol1y || 0, 0)} — would cost no more than ~5% of the total.</p>
         {data.screen && <p className="mt-3 text-xs text-white/45">Nifty 500 screener score {data.screen.score ?? "—"} ({data.screen.signal}).</p>}
       </Card>
     </div>

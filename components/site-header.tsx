@@ -32,12 +32,12 @@ export function SiteHeader() {
           <Image src={brand.logo} alt="" width={38} height={38} className="rounded-2xl bg-white p-2 shadow-[0_12px_40px_rgba(96,165,250,.18)] transition group-hover:scale-105" priority />
           <span className="font-display text-xl font-bold tracking-[-.04em] sm:text-2xl">NumSum Labs</span>
         </Link>
-        <div ref={navRef} className="mx-auto hidden items-center gap-1 text-sm text-white/70 lg:flex">
+        <div ref={navRef} className="mx-auto hidden items-center gap-0.5 text-sm text-white/70 lg:flex">
           {siteMenu.map((g) => { const active = g.links.some((l) => isActive(pathname, l.href)); const isOpen = menu === g.label; return <div key={g.label} className="relative" onMouseEnter={() => setMenu(g.label)} onMouseLeave={() => setMenu((m) => (m === g.label ? null : m))}>
-            <button type="button" aria-expanded={isOpen} aria-haspopup="true" onClick={() => setMenu(isOpen ? null : g.label)} className={cn("flex items-center gap-1 rounded-full px-3.5 py-2 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300/60", (active || isOpen) && "bg-white/10 text-white")}>{g.label}<ChevronDown size={14} className={cn("transition", isOpen && "rotate-180")} aria-hidden="true" /></button>
+            <button type="button" aria-expanded={isOpen} aria-haspopup="true" onClick={() => setMenu(isOpen ? null : g.label)} className={cn("flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-2 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300/60", (active || isOpen) && "bg-white/10 text-white")}>{g.label}<ChevronDown size={14} className={cn("transition", isOpen && "rotate-180")} aria-hidden="true" /></button>
             {isOpen && <div className="absolute left-1/2 top-full z-50 w-[22rem] -translate-x-1/2 pt-2"><div className="rounded-3xl border border-white/10 bg-[#070c16]/98 p-2 shadow-[0_30px_80px_rgba(0,0,0,.55)] backdrop-blur-2xl">{g.links.map((l) => <Link key={l.href} href={l.href} onClick={() => setMenu(null)} className={cn("block rounded-2xl px-4 py-3 transition hover:bg-white/[0.07]", isActive(pathname, l.href) && "bg-white/[0.06]")}><span className="block font-medium text-white">{l.label}</span>{l.desc && <span className="mt-0.5 block text-xs text-white/50">{l.desc}</span>}</Link>)}</div></div>}
           </div>; })}
-          {siteMenuLinks.map((l) => <Link key={l.href} href={l.href} className={cn("rounded-full px-3.5 py-2 transition hover:bg-white/10 hover:text-white", isActive(pathname, l.href) && "bg-white/10 text-white")}>{l.label}</Link>)}
+          {siteMenuLinks.map((l) => <Link key={l.href} href={l.href} className={cn("whitespace-nowrap rounded-full px-3 py-2 transition hover:bg-white/10 hover:text-white", isActive(pathname, l.href) && "bg-white/10 text-white")}>{l.label}</Link>)}
         </div>
         <div className="ml-auto hidden items-center gap-2 lg:flex"><ThemeToggle /><AuthNav /></div>
         <ThemeToggle className="ml-auto lg:hidden" />
