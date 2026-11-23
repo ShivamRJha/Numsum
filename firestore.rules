@@ -227,6 +227,31 @@ service cloud.firestore {
     match /contribution_claims/{id} { allow read: if platformAdmin() || contributionOwner(); allow create: if isProfileCompleteUser() && contributionIncomingOwner() && request.resource.data.status == 'submitted' && !request.resource.data.keys().hasAny(['approvedScore','reviewerId','reviewerName','reviewedAt']); allow update: if platformAdmin() || (claimEditableByOwner() && claimSafeOwnerPatch()); allow delete: if platformAdmin(); }
 
     match /internal_threads/{id} { allow read, write: if platformAdmin(); }
+    // Public enquiry / lead form (no sign-in). Keep in sync with lib/repositories/enquiries.ts.
+    function optString(field, max) { return !request.resource.data.keys().hasAny([field]) || (request.resource.data[field] is string && request.resource.data[field].size() <= max); }
+    function validEnquiry() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['name','email','phone','company','designation','city','topic','message','modules','users','sourcePage','status','createdAt'])
+        && d.keys().hasAll(['name','email','topic','message','sourcePage','status','createdAt'])
+        && d.name is string && d.name.size() >= 2 && d.name.size() <= 120
+        && d.email is string && d.email.size() <= 200 && d.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+        && d.message is string && d.message.size() >= 10 && d.message.size() <= 4000
+        && d.topic in ['iris_demo','iris_quote','msme_problem','partnership','investment_tool','general']
+        && d.sourcePage is string && d.sourcePage.size() <= 200
+        && d.status == 'new' && d.createdAt == request.time
+        && optString('phone', 30) && optString('company', 160) && optString('designation', 120) && optString('city', 120) && optString('users', 40)
+        && (!d.keys().hasAny(['modules']) || (d.modules is list && d.modules.size() <= 20));
+    }
+    match /enquiries/{id} { allow create: if validEnquiry(); allow read, update, delete: if platformAdmin(); }
+    // Market data is written only by the scheduled refresh job (service account bypasses rules).
+    match /market_funds/{id} { allow read: if true; allow write: if false; }
+    match /market_meta/{id} { allow read: if true; allow write: if false; }
+    // Saved investment plans belong to the signed-in user who created them.
+    match /investment_plans/{id} {
+      allow read, delete: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid && request.resource.data.keys().hasOnly(['userId','name','inputs','createdAt','updatedAt']) && request.resource.data.name is string && request.resource.data.name.size() <= 80;
+      allow update: if signedIn() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid && request.resource.data.keys().hasOnly(['userId','name','inputs','createdAt','updatedAt']);
+    }
     match /career_openings/{id} { allow read: if true; allow write: if platformAdmin(); }
     match /career_applications/{id} { allow create: if true; allow read, update, delete: if platformAdmin(); }
     match /private_collaboration_groups/{id} { allow read, write: if signedIn() && (platformAdmin() || ownsExisting() || ownsIncoming()); }

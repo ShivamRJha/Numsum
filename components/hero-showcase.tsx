@@ -4,10 +4,10 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 const slides = [
-  { title: "Problem intake", eyebrow: "01 · MSME", text: "Capture a real operational issue with private context protected.", stat: "48h", label: "review window" },
-  { title: "Structured challenge", eyebrow: "02 · NumSum", text: "Convert symptoms into a clear scope, constraints, and success metric.", stat: "4", label: "solution paths" },
-  { title: "Solver network", eyebrow: "03 · Community", text: "Invite students, researchers, experts, and startups to respond.", stat: "12+", label: "collaborators" },
-  { title: "Impact record", eyebrow: "04 · Results", text: "Publish approved outcomes, case studies, and learning assets.", stat: "ROI", label: "tracked evidence" },
+  { title: "Problem intake", eyebrow: "01 · MSME", text: "Capture a real operational issue with private context protected.", stat: "01", label: "private intake" },
+  { title: "Structured challenge", eyebrow: "02 · NumSum", text: "Convert symptoms into a clear scope, constraints, and success metric.", stat: "02", label: "clear scope" },
+  { title: "Solver network", eyebrow: "03 · Community", text: "Invite students, researchers, experts, and startups to respond.", stat: "03", label: "expert network" },
+  { title: "Impact record", eyebrow: "04 · Results", text: "Publish approved outcomes, case studies, and learning assets.", stat: "04", label: "tracked evidence" },
 ] as const;
 
 function useReducedMotion() {

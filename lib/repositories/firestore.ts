@@ -172,6 +172,10 @@ export const COLLECTIONS = {
   userRoleRequests: "user_role_requests",
   teamMembers: "team_members",
   systemStats: "system_stats",
+  enquiries: "enquiries",
+  marketFunds: "market_funds",
+  marketMeta: "market_meta",
+  investmentPlans: "investment_plans",
   systemDocuments: "system_documents",
   settings: "settings",
   roleDefinitions: "role_definitions",
@@ -293,13 +297,18 @@ function traceRepositoryRead(
     currentRole: null,
   });
 }
+/** Platform initialization seeds `__schema` sentinel docs in real collections; they are never content. */
+export function isSentinelId(id: string | undefined | null) {
+  return typeof id === "string" && id.startsWith("__");
+}
 export const listCollection = cache(
   async <T>(name: CollectionName, constraints: QueryConstraint[] = []) =>
-    (await getDocs(queryFor(name, constraints))).docs.map((item) =>
-      withId<T>(item),
-    ),
+    (await getDocs(queryFor(name, constraints))).docs
+      .filter((item) => !isSentinelId(item.id))
+      .map((item) => withId<T>(item)),
 );
 export async function getRecord<T>(name: CollectionName, id: string) {
+  if (isSentinelId(id)) return null;
   const snap = await getDoc(doc(db, name, id));
   return snap.exists() ? withId<T>(snap) : null;
 }
@@ -314,6 +323,8 @@ export async function updateRecord(
   id: string,
   data: Record<string, unknown>,
 ) {
+  if (isSentinelId(id) && (data.visibility === "public" || data.status === "open" || data.status === "published"))
+    throw new Error("System records cannot be published.");
   return setDoc(
     doc(db, name, id),
     sanitizeFirestorePayload({ ...data, updatedAt: serverTimestamp() }),
@@ -964,7 +975,7 @@ export const getMemberVisibleProblemMeetingNotes = cache(async (problemId: strin
 );
 
 
-export const demoImpactMetrics: PublicImpactMetrics = { totalProblemsSubmitted: 48, totalProblemsSolved: 9, totalChallengesLaunched: 7, totalChallengeParticipants: 126, totalCaseStudiesPublished: 4, totalCommunityPosts: 38, totalMonetarySavings: "₹18.4L", totalTimeSaved: "1,240 hrs", totalWasteReduction: "11.8%", totalProductivityGain: "14.5%", totalClientsGained: 23, totalPublicReviews: 6 };
+export const emptyImpactMetrics: PublicImpactMetrics = { totalProblemsSubmitted: 0, totalProblemsSolved: 0, totalChallengesLaunched: 0, totalChallengeParticipants: 0, totalCaseStudiesPublished: 0, totalCommunityPosts: 0, totalMonetarySavings: "", totalTimeSaved: "", totalWasteReduction: "", totalProductivityGain: "", totalClientsGained: 0, totalPublicReviews: 0 };
 export async function getPublicProblemReviews() { return listCollection<ProblemPublicReview>(COLLECTIONS.problemPublicReviews, [where("approvedForPublic", "==", true), where("consentForPublicDisplay", "==", true), limit(20)]).catch(() => []); }
 export const getProblemReviewsForMember = cache(async (memberId: string) => listCollection<ProblemPublicReview>(COLLECTIONS.problemPublicReviews, [where("memberId", "==", memberId), limit(100)]).catch(() => []));
 export async function getProblemReviewForMember(problemId: string, memberId: string) { return (await listCollection<ProblemPublicReview>(COLLECTIONS.problemPublicReviews, [where("problemId", "==", problemId), where("memberId", "==", memberId), limit(1)]).catch(() => []))[0] || null; }
@@ -985,7 +996,7 @@ export async function getMemberPendingCaseStudyComments(caseStudyId: string, mem
 export async function createCaseStudyComment(data: Omit<CaseStudyComment, "id" | "createdAt" | "updatedAt" | "status">) { const ref = await createRecord<CaseStudyComment>(COLLECTIONS.caseStudyComments, { ...data, status: "pending", createdAt: serverTimestamp(), updatedAt: serverTimestamp() } as never); return { ...data, id: ref.id, status: "pending" } as CaseStudyComment; }
 export async function getCaseStudyUpvote(caseStudyId: string, memberId: string) { return (await listCollection<CaseStudyUpvote>(COLLECTIONS.caseStudyUpvotes, [where("caseStudyId", "==", caseStudyId), where("memberId", "==", memberId), limit(1)]).catch(() => []))[0] || null; }
 export async function toggleCaseStudyUpvote(caseStudyId: string, memberId: string, membershipId?: string) { const existing = await getCaseStudyUpvote(caseStudyId, memberId); if (existing) { await deleteRecord(COLLECTIONS.caseStudyUpvotes, existing.id); await updateRecord(COLLECTIONS.caseStudies, caseStudyId, { upvoteCount: increment(-1) }).catch(() => undefined); return false; } await createRecord<CaseStudyUpvote>(COLLECTIONS.caseStudyUpvotes, { caseStudyId, memberId, membershipId, createdAt: serverTimestamp() } as never); await updateRecord(COLLECTIONS.caseStudies, caseStudyId, { upvoteCount: increment(1) }).catch(() => undefined); return true; }
-export async function getPublicImpactMetrics(): Promise<PublicImpactMetrics> { const [problems, solved, challenges, participants, cases, posts, reviews] = await Promise.all([listCollection<ProblemStatement>(COLLECTIONS.problemStatements, [limit(200)]).catch(() => []), listCollection<ProblemStatement>(COLLECTIONS.problemStatements, [where("status", "==", "solved"), limit(100)]).catch(() => []), getPublicChallenges().catch(() => []), listCollection<ChallengeParticipation>(COLLECTIONS.challengeParticipations, [limit(500)]).catch(() => []), getPublicAdminCaseStudies().catch(() => []), listPublicDiscussionThreads().catch(() => []), getPublicProblemReviews().catch(() => [])]); const publicMetrics = problems.map((p) => p.impactMetrics).filter((m) => m?.isPublic); return { ...demoImpactMetrics, totalProblemsSubmitted: Math.max(problems.length, demoImpactMetrics.totalProblemsSubmitted), totalProblemsSolved: Math.max(solved.length, demoImpactMetrics.totalProblemsSolved), totalChallengesLaunched: Math.max(challenges.length, demoImpactMetrics.totalChallengesLaunched), totalChallengeParticipants: Math.max(participants.length, demoImpactMetrics.totalChallengeParticipants), totalCaseStudiesPublished: Math.max(cases.length, demoImpactMetrics.totalCaseStudiesPublished), totalCommunityPosts: Math.max(posts.length, demoImpactMetrics.totalCommunityPosts), totalPublicReviews: Math.max(reviews.length, demoImpactMetrics.totalPublicReviews), totalClientsGained: Math.max(publicMetrics.reduce((sum, m) => sum + Number(m?.clientsGained || 0), 0), demoImpactMetrics.totalClientsGained) }; }
+export async function getPublicImpactMetrics(): Promise<PublicImpactMetrics> { const [problems, solved, challenges, participants, cases, posts, reviews] = await Promise.all([listCollection<ProblemStatement>(COLLECTIONS.problemStatements, [limit(200)]).catch(() => []), listCollection<ProblemStatement>(COLLECTIONS.problemStatements, [where("status", "==", "solved"), limit(100)]).catch(() => []), getPublicChallenges().catch(() => []), listCollection<ChallengeParticipation>(COLLECTIONS.challengeParticipations, [limit(500)]).catch(() => []), getPublicAdminCaseStudies().catch(() => []), listPublicDiscussionThreads().catch(() => []), getPublicProblemReviews().catch(() => [])]); const publicMetrics = problems.map((p) => p.impactMetrics).filter((m) => m?.isPublic); return { ...emptyImpactMetrics, totalProblemsSubmitted: problems.length, totalProblemsSolved: solved.length, totalChallengesLaunched: challenges.length, totalChallengeParticipants: participants.length, totalCaseStudiesPublished: cases.length, totalCommunityPosts: posts.length, totalPublicReviews: reviews.length, totalClientsGained: publicMetrics.reduce((sum, m) => sum + Number(m?.clientsGained || 0), 0) }; }
 
 
 
