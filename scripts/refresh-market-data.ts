@@ -193,7 +193,7 @@ type Db = { collection: (name: string) => Col; batch: () => Batch };
 async function firestore(): Promise<Db> {
   const { initializeApp, applicationDefault, getApps } = await import("firebase-admin/app");
   const { getFirestore } = (await import("firebase-admin/firestore")) as unknown as { getFirestore: () => Db };
-  const projectId = process.env.FIREBASE_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT;
+  const projectId = [process.env.FIREBASE_PROJECT_ID, process.env.GOOGLE_CLOUD_PROJECT, process.env.GCLOUD_PROJECT].map((v) => (v || "").trim()).find(Boolean);
   if (!projectId) throw new Error("FIREBASE_PROJECT_ID is not set.");
   if (!getApps().length) initializeApp({ credential: applicationDefault(), projectId });
   return getFirestore();
