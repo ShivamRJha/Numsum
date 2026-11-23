@@ -4,7 +4,7 @@
  */
 import { attachTer, parseAmfi, parseTer, type FundCandidate } from "./funds-pipeline";
 import { parseMfapiHistory, type NavPoint } from "./metrics";
-import { parseEodCsv, type Bar, type Fundamentals } from "./stocks";
+import { crossCheck, parseEodCsv, type Bar, type Fundamentals } from "./stocks";
 import universe from "./nifty500.json";
 
 const UA = "Mozilla/5.0 (compatible; NumSumLabs-MarketData/1.1; +https://www.numsum.in)";
@@ -64,34 +64,50 @@ export type UniverseRow = [symbol: string, name: string, industry: string];
 export const NIFTY500 = universe as UniverseRow[];
 export const UNIVERSE_BY_SYMBOL = new Map(NIFTY500.map((u) => [u[0], u]));
 
-/** NSE daily bars from the eod2 dataset, topped up with recent Yahoo closes when eod2 lags. */
-export async function fetchBars(symbol: string, { topUp = true } = {}): Promise<Bar[]> {
-  const bars = parseEodCsv(await fetchText(EOD(symbol), { tries: 2, timeout: 25_000 }));
-  if (!topUp || !bars.length) return bars;
-  const lagDays = (Date.now() - bars[bars.length - 1].t) / 864e5;
-  if (lagDays < 2) return bars;
+/**
+ * NSE daily bars with redundancy: eod2 dataset first, Yahoo Finance 10-year history as a fallback, and the two
+ * sources cross-checked on overlapping days. Recent days missing from eod2 are topped up from Yahoo.
+ */
+export async function fetchBarsChecked(symbol: string, { topUp = true } = {}): Promise<{ bars: Bar[]; source: string; check: string }> {
+  let bars: Bar[] = [];
+  try { bars = parseEodCsv(await fetchText(EOD(symbol), { tries: 2, timeout: 25_000 })); } catch { bars = []; }
+  if (bars.length < 60) {
+    const y = await yahooChart(`${symbol}.NS`, "10y");
+    if (y.length < 60) throw new Error(`No price history for ${symbol}`);
+    return { bars: y, source: "Yahoo Finance", check: "single source" };
+  }
+  if (!topUp) return { bars, source: "NSE (eod2)", check: "single source" };
   try {
     const recent = await yahooChart(`${symbol}.NS`, "1mo");
+    const check = crossCheck(bars, recent);
     const last = bars[bars.length - 1].t;
-    // Guard against an unadjusted split between the two sources
-    const overlap = recent.find((b) => Math.abs(b.t - last) < 864e5);
-    if (overlap && Math.abs(overlap.c / bars[bars.length - 1].c - 1) > 0.15) return bars;
-    return [...bars, ...recent.filter((b) => b.t > last + 864e5 / 2)];
-  } catch { return bars; }
+    if (check === "sources differ") return { bars, source: "NSE (eod2)", check };
+    return { bars: [...bars, ...recent.filter((b) => b.t > last + 864e5 / 2)], source: "NSE (eod2) + Yahoo Finance", check };
+  } catch { return { bars, source: "NSE (eod2)", check: "single source" }; }
 }
 
-/** Nifty 50 bars and its latest P/E (eod2 keeps P/E for indices). */
+export async function fetchBars(symbol: string, opts: { topUp?: boolean } = {}): Promise<Bar[]> {
+  return (await fetchBarsChecked(symbol, opts)).bars;
+}
+
+/** Nifty 50 bars and its latest P/E (eod2 keeps P/E for indices), with Yahoo as backup. */
 export async function fetchIndex(): Promise<{ bars: Bar[]; pe: number | null }> {
-  const text = await fetchText(EOD("nifty 50"), { tries: 2, timeout: 25_000 });
-  const bars = parseEodCsv(text);
-  const lines = text.trim().split(/\r?\n/);
-  const head = lines[0].split(",").map((h) => h.trim().toLowerCase());
-  const iPe = head.findIndex((h) => h === "p/e" || h === "pe");
-  const lastRow = lines[lines.length - 1].split(",");
-  const pe = iPe >= 0 ? Number(lastRow[iPe]) || null : Number(lastRow[6]) || null;
-  let merged = bars;
-  try { const recent = await yahooChart("^NSEI", "1mo"); const last = bars[bars.length - 1]?.t || 0; merged = [...bars, ...recent.filter((b) => b.t > last + 864e5 / 2)]; } catch { /* eod2 only */ }
-  return { bars: merged, pe };
+  let bars: Bar[] = [], pe: number | null = null;
+  try {
+    const text = await fetchText(EOD("nifty 50"), { tries: 2, timeout: 25_000 });
+    bars = parseEodCsv(text);
+    const lines = text.trim().split(/\r?\n/);
+    const head = lines[0].split(",").map((h) => h.trim().toLowerCase());
+    const iPe = head.findIndex((h) => h === "p/e" || h === "pe");
+    const lastRow = lines[lines.length - 1].split(",");
+    pe = (iPe >= 0 ? Number(lastRow[iPe]) : Number(lastRow[6])) || null;
+  } catch { bars = []; }
+  try {
+    if (bars.length < 60) return { bars: await yahooChart("^NSEI", "10y"), pe };
+    const recent = await yahooChart("^NSEI", "1mo");
+    const last = bars[bars.length - 1].t;
+    return { bars: [...bars, ...recent.filter((b) => b.t > last + 864e5 / 2)], pe };
+  } catch { return { bars, pe }; }
 }
 
 export async function yahooChart(ySymbol: string, range = "1mo"): Promise<Bar[]> {

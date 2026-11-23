@@ -19,7 +19,7 @@ export default async function InvestmentPlannerPage() {
   const picks: StockPick[] = [];
   for (const r of stockDoc?.rows || []) {
     if (picks.length >= 15) break;
-    if ((r.sc ?? 0) < 57 || (r.liq ?? 0) < 5) continue;
+    if ((r.sc ?? 0) < 57 || (r.liq ?? 0) < 5 || r.hl === "Hot" || r.hl === "Overheated") continue;
     const n = perIndustry.get(r.i) || 0;
     if (n >= 2) continue;
     perIndustry.set(r.i, n + 1);

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { AuthNav } from "@/components/auth-nav";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { brand } from "@/lib/brand";
 import { siteMenu, siteMenuLinks } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
@@ -38,8 +39,9 @@ export function SiteHeader() {
           </div>; })}
           {siteMenuLinks.map((l) => <Link key={l.href} href={l.href} className={cn("rounded-full px-3.5 py-2 transition hover:bg-white/10 hover:text-white", isActive(pathname, l.href) && "bg-white/10 text-white")}>{l.label}</Link>)}
         </div>
-        <div className="ml-auto hidden lg:block"><AuthNav /></div>
-        <button className="ml-auto rounded-full border border-white/10 p-3 text-white/75 lg:hidden" aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} aria-controls="mobile-site-menu" onClick={() => setOpen((value) => !value)}>{open ? <X size={18} /> : <Menu size={18} />}</button>
+        <div className="ml-auto hidden items-center gap-2 lg:flex"><ThemeToggle /><AuthNav /></div>
+        <ThemeToggle className="ml-auto lg:hidden" />
+        <button className="rounded-full border border-white/10 p-3 text-white/75 lg:hidden" aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} aria-controls="mobile-site-menu" onClick={() => setOpen((value) => !value)}>{open ? <X size={18} /> : <Menu size={18} />}</button>
       </nav>
       {open && <div id="mobile-site-menu" className="max-h-[calc(100vh-4rem)] overflow-y-auto border-t border-white/10 bg-[#02050a]/98 px-5 pb-6 lg:hidden"><div className="mx-auto grid max-w-7xl gap-2 pt-4">
         {siteMenu.map((g) => { const isOpen = mobileGroup === g.label; return <section key={g.label} className="rounded-2xl border border-white/10 bg-white/[0.03]"><button type="button" aria-expanded={isOpen} onClick={() => setMobileGroup(isOpen ? null : g.label)} className="flex w-full items-center justify-between px-4 py-3 text-left text-base font-medium text-white">{g.label}<ChevronDown size={16} className={cn("transition", isOpen && "rotate-180")} /></button>{isOpen && <div className="grid gap-1 px-2 pb-2">{g.links.map((l) => <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="rounded-xl px-3 py-2.5 text-white/80 hover:bg-white/[0.06]">{l.label}</Link>)}</div>}</section>; })}

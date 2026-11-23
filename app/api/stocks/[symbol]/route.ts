@@ -1,7 +1,7 @@
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { fetchBars, fetchIndex, UNIVERSE_BY_SYMBOL, YahooSession } from "@/lib/invest/sources";
-import { adjustSplits, computeStockStats, investorChecks, isFinancial, verdict, weekly } from "@/lib/invest/stocks";
+import { fetchBarsChecked, fetchIndex, UNIVERSE_BY_SYMBOL, YahooSession } from "@/lib/invest/sources";
+import { adjustSplits, computeStockStats, heat, investorChecks, isFinancial, verdict, weekly } from "@/lib/invest/stocks";
 import { META_COLLECTION, STOCK_SUMMARY_DOC, type StockSummaryDoc } from "@/lib/invest/types";
 import { json } from "@/lib/invest/server-auth";
 
@@ -16,15 +16,17 @@ export async function GET(_req: Request, { params }: { params: Promise<{ symbol:
   if (!/^[A-Z0-9&\-]{1,20}$/.test(symbol)) return json({ error: "Enter an NSE symbol such as RELIANCE or TCS." }, { status: 400 });
 
   const [barsRes, indexRes, summaryRes] = await Promise.allSettled([
-    fetchBars(symbol),
+    fetchBarsChecked(symbol),
     fetchIndex(),
     getDoc(doc(db, META_COLLECTION, STOCK_SUMMARY_DOC)),
   ]);
-  if (barsRes.status !== "fulfilled" || barsRes.value.length < 60) return json({ error: `No NSE price history found for “${symbol}”. Check the symbol (e.g. HDFCBANK, M&M).` }, { status: 404, cache: "public, s-maxage=600" });
+  if (barsRes.status !== "fulfilled" || barsRes.value.bars.length < 60) return json({ error: `No NSE price history found for “${symbol}”. Check the symbol (e.g. HDFCBANK, M&M).` }, { status: 404, cache: "public, s-maxage=600" });
   const index = indexRes.status === "fulfilled" ? indexRes.value : null;
   const summary = summaryRes.status === "fulfilled" && summaryRes.value.exists() ? (summaryRes.value.data() as StockSummaryDoc) : null;
 
-  const stats = computeStockStats(symbol, barsRes.value, index?.bars || null);
+  const priced = barsRes.value;
+  const base = computeStockStats(symbol, priced.bars, index?.bars || null);
+  const stats = base ? { ...base, check: priced.check } : null;
   if (!stats) return json({ error: "Not enough price history to analyse this stock." }, { status: 404 });
 
   const uni = UNIVERSE_BY_SYMBOL.get(symbol);
@@ -35,9 +37,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ symbol:
   const fundamentals = fu || (row ? { name: row.n, pe: row.pe, pb: row.pb, roe: row.roe, de: row.de, divYield: row.dy, epsGrowth: row.eg, mcapCr: row.mc, source: "Last nightly refresh" } : null);
   const industryPe = industry ? summary?.industries?.[industry]?.pe ?? null : null;
   const checks = investorChecks(stats, fundamentals, { indexPe: index?.pe ?? summary?.indexPe ?? null, industryPe, financial: isFinancial(industry) });
-  const v = verdict(checks, stats);
+  const h = heat(stats, fundamentals, industryPe);
+  const v = verdict(checks, stats, h);
 
-  const adj = adjustSplits(barsRes.value).bars;
+  const adj = adjustSplits(priced.bars).bars;
   const daily = adj.slice(-520);
   const sma = (n: number, i: number) => { const a = adj.length - daily.length + i; if (a < n - 1) return null; let s = 0; for (let k = a - n + 1; k <= a; k++) s += adj[k].c; return Math.round((s / n) * 100) / 100; };
   const chart = daily.map((b, i) => [b.t, Math.round(b.c * 100) / 100, sma(50, i), sma(200, i)]);
@@ -48,6 +51,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ symbol:
     stats, fundamentals, checks, verdict: v, indexPe: index?.pe ?? null, industryPe,
     screen: row ? { score: row.sc, signal: row.sig, rankOf: summary?.count } : null,
     chart, weekly: weekly(adj).slice(-530), indexWeekly: idxWeekly.slice(-530),
-    sources: ["NSE daily prices via the eod2 dataset", fu ? "Yahoo Finance (fundamentals, recent prices)" : row ? "NumSum nightly refresh (fundamentals)" : "Fundamentals unavailable right now"],
+    dataCheck: { prices: priced.source, priceCheck: priced.check, fundamentals: fu ? "Yahoo Finance (live)" : row ? "Last nightly refresh" : "unavailable" },
+    sources: [`Prices: ${priced.source} (${priced.check})`, fu ? "Fundamentals: Yahoo Finance" : row ? "Fundamentals: NumSum nightly refresh" : "Fundamentals unavailable right now"],
   }, { cache: CACHE });
 }

@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { cagr, maxDrawdown, parseMfapiHistory, percentiles, type NavPoint } from "../../lib/invest/metrics";
 import { computeFundStats, parseAmfi, parseTer, schemeKey, scoreFunds } from "../../lib/invest/funds-pipeline";
-import { adjustSplits, computeStockStats, investorChecks, verdict, type Bar } from "../../lib/invest/stocks";
+import { adjustSplits, computeStockStats, heat, investorChecks, verdict, type Bar } from "../../lib/invest/stocks";
 
 const DAY = 864e5;
 function series(years: number, annual: number, wobble: number, seed: number): NavPoint[] {
@@ -45,7 +45,7 @@ const parsed = parseAmfi(amfi);
 assert.deepEqual(parsed.map((p) => [p.code, p.bucket, p.amc, p.navDate]), [["1001", "large", "Alpha Mutual Fund", "2026-11-20"], ["2001", "idx_n50", "Beta Mutual Fund", "2026-11-20"]]);
 
 // Scoring: a steadier, cheaper, higher-return fund ranks above a volatile, costly one
-const base = { amc: "X", nav: 1, navDate: "2026-11-20", bucket: "large" };
+const base = { amc: "X", nav: 1, navDate: "", bucket: "large" };
 const stats = [
   computeFundStats({ ...base, code: "a", name: "Steady", ter: 0.5 }, series(8, 0.14, 0.6, 3))!,
   computeFundStats({ ...base, code: "b", name: "Choppy", ter: 1.2 }, series(8, 0.09, 2.5, 5))!,
@@ -83,3 +83,15 @@ const piped = `Scheme Code|Scheme Name|Fund House|Scheme Category|NAV|NAV Date
 3003|Gamma Liquid Fund - Direct Plan - Growth|Gamma MF|Liquid Fund|2500.5|20-Nov-2026`;
 assert.deepEqual(parseAmfi(piped).map((p) => [p.code, p.bucket, p.amc]), [["3001", "mid", "Gamma MF"], ["3002", "largemid", "Gamma MF"], ["3003", "liquid", "Gamma MF"]]);
 console.log("pipe layout parsed");
+
+// Heat: a stock that doubled in six months and sits far above its 200-day average is flagged
+{
+  const hotStats = { ...st, ext200: 0.6, r6m: 0.8, r1y: 1.2, r1yPctile: 0.98, rsi14: 82, fromLow52: 1.6 };
+  const h = heat(hotStats);
+  assert.equal(h.label, "Overheated", `heat ${h.score}`);
+  const calm = heat({ ...st, ext200: 0.05, r6m: 0.05, r1y: 0.1, r1yPctile: 0.4, rsi14: 50, fromLow52: 0.2 });
+  assert.equal(calm.label, "Calm");
+  const vh = verdict(investorChecks(hotStats, { roe: 0.25, de: 0.2, pe: 20, pb: 3, margin: 0.2, epsGrowth: 0.2, revGrowth: 0.1 }, { indexPe: 22 }), hotStats, h);
+  assert.ok(vh.label !== "Strong" && vh.label !== "Positive", "overheated cannot be Strong/Positive");
+  console.log("heat tests passed", h.score, vh.label);
+}

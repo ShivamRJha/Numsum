@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Badge, Stat, num, pct, signed, tone } from "@/components/invest/kit";
+import { Explain, Term } from "@/components/invest/explain";
 import { StockSearch } from "@/components/invest/stock-search";
 import { Card } from "@/components/ui";
 import { portfolioStats, type StockStats, type Verdict } from "@/lib/invest/stocks";
@@ -47,6 +48,8 @@ export function PortfolioClient({ universe }: { universe: [string, string, strin
 
   return <div className="grid gap-6">
     <Card className="premium-card">
+      <Explain always={false}>Owning several stocks only reduces risk if they do not all move together. Add your stocks (and how much you hold of each) to see how much real diversification you have, and what weights would balance the risk.</Explain>
+      <div className="mt-4" />
       <StockSearch universe={universe} onPick={(s) => setSymbols((l) => (l.includes(s) || l.length >= 8 ? l : [...l, s]))} placeholder="Add a stock (up to 8)…" />
       {symbols.length > 0 && <div className="mt-5 overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm">
         <thead className="text-xs uppercase tracking-[.12em] text-white/45"><tr><th className="py-2 pr-3">Stock</th><th className="py-2 pr-3">Signal</th><th className="py-2 pr-3 text-right">1y</th><th className="py-2 pr-3 text-right">Volatility</th><th className="py-2 pr-3 text-right">Beta</th><th className="py-2 pr-3 text-right">Your weight</th><th className="py-2 pr-3 text-right">Risk-balanced</th><th className="py-2" /></tr></thead>
@@ -61,13 +64,13 @@ export function PortfolioClient({ universe }: { universe: [string, string, strin
 
     {ps && <>
       <div className="grid gap-3 sm:grid-cols-4">
-        <Stat label="Basket volatility" value={pct(ps.equal.vol)} hint={`Average stock ${pct(ready.reduce((a, x, i) => a + userW[i] * (ps.vol[i] || 0), 0))}`} />
-        <Stat label="Diversification ratio" value={ps.equal.diversification.toFixed(2)} hint="1.0 = none; 1.4+ = good" />
-        <Stat label="Risk-balanced volatility" value={pct(ps.inverseVol.vol)} hint="Weights ∝ 1 / volatility" />
+        <Stat label={<Term id="volatility">Basket volatility</Term>} value={pct(ps.equal.vol)} hint={`Average stock ${pct(ready.reduce((a, x, i) => a + userW[i] * (ps.vol[i] || 0), 0))}`} />
+        <Stat label={<Term id="divratio">Diversification ratio</Term>} value={ps.equal.diversification.toFixed(2)} hint="1.0 = none; 1.4+ = good" />
+        <Stat label={<Term id="riskbalanced">Risk-balanced volatility</Term>} value={pct(ps.inverseVol.vol)} hint="Weights ∝ 1 / volatility" />
         <Stat label="Return (3y, your weights)" value={<span className={tone(ps.equal.ret)}>{pct(ps.equal.ret)}</span>} hint={`${ps.weeks} weeks of common data`} />
       </div>
       <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
-        <Card className="premium-card"><h2 className="font-display text-2xl">Correlation matrix</h2><p className="mt-1 text-sm text-white/55">Weekly returns, last three years. Red = move together, blue = move apart.</p>
+        <Card className="premium-card"><h2 className="font-display text-2xl"><Term id="correlation">Correlation</Term> matrix</h2><p className="mt-1 text-sm text-white/55">Weekly returns, last three years. Red = move together, blue = move apart.</p>
           <div className="mt-4 overflow-x-auto"><table className="text-center text-xs"><thead><tr><th />{ready.map((x) => <th key={x.symbol} className="px-1 pb-2 font-medium text-white/60">{x.symbol}</th>)}</tr></thead><tbody>{ready.map((x, i) => <tr key={x.symbol}><th className="pr-2 text-right font-medium text-white/60">{x.symbol}</th>{ready.map((y, j) => <td key={y.symbol} className="h-10 w-14 rounded tabular-nums text-white" style={{ background: i === j ? "rgba(255,255,255,.06)" : heat(ps.corr[i][j]) }}>{i === j ? "—" : ps.corr[i][j].toFixed(2)}</td>)}</tr>)}</tbody></table></div></Card>
         <Card className="premium-card"><h2 className="font-display text-2xl">What to look at</h2>{warnings.length ? <ul className="mt-4 grid gap-2 text-sm text-white/75">{warnings.map((w) => <li key={w} className="rounded-2xl border border-amber-200/20 bg-amber-200/5 p-3">{w}</li>)}</ul> : <p className="mt-4 text-sm text-emerald-100">No red flags: correlations are moderate, weights are within volatility guides and no single industry dominates.</p>}</Card>
       </div>

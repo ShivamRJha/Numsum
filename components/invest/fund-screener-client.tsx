@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Badge, ScoreBar, field, pct, selectCls } from "@/components/invest/kit";
+import { Explain, Term } from "@/components/invest/explain";
 import { Card } from "@/components/ui";
 import { BUCKETS } from "@/lib/invest/buckets";
 import { inr } from "@/lib/invest/planner";
@@ -13,19 +14,19 @@ const SORTS: [string, string, (f: FundLite) => number | null, boolean][] = [
   ["c5", "5-year return", (f) => f.c5, false], ["v", "Lowest volatility", (f) => f.v, true], ["dd", "Smallest max fall", (f) => f.dd, false], ["y", "Longest history", (f) => f.y, false],
 ];
 
-const ROWS: [string, (f: FundLite) => string, (f: FundLite) => number | null, boolean][] = [
-  ["Score (0–100)", (f) => (f.s === null ? "—" : String(Math.round(f.s))), (f) => f.s, false],
-  ["Expense ratio (direct)", (f) => (f.t === null ? "—" : `${f.t.toFixed(2)}%`), (f) => f.t, true],
-  ["1-year return", (f) => pct(f.c1), (f) => f.c1, false],
-  ["3-year return (CAGR)", (f) => pct(f.c3), (f) => f.c3, false],
-  ["5-year return (CAGR)", (f) => pct(f.c5), (f) => f.c5, false],
-  ["Volatility (3y)", (f) => pct(f.v), (f) => f.v, true],
-  ["Max fall (5y)", (f) => pct(f.dd, 0), (f) => f.dd, false],
-  ["Sortino ratio (3y)", (f) => (f.so === null ? "—" : f.so.toFixed(2)), (f) => f.so, false],
-  ["Beat group median (rolling 12m)", (f) => pct(f.cs, 0), (f) => f.cs, false],
-  ["Tracking vs peers", (f) => pct(f.tr, 2), (f) => f.tr, true],
-  ["Years of history", (f) => f.y.toFixed(1), (f) => f.y, false],
-  ["Rank in group", (f) => String(f.r), (f) => f.r, true],
+const ROWS: [string, (f: FundLite) => string, (f: FundLite) => number | null, boolean, string][] = [
+  ["Score (0–100)", (f) => (f.s === null ? "—" : String(Math.round(f.s))), (f) => f.s, false, "score"],
+  ["Expense ratio (direct)", (f) => (f.t === null ? "—" : `${f.t.toFixed(2)}%`), (f) => f.t, true, "ter"],
+  ["1-year return", (f) => pct(f.c1), (f) => f.c1, false, "cagr"],
+  ["3-year return (per year)", (f) => pct(f.c3), (f) => f.c3, false, "cagr"],
+  ["5-year return (per year)", (f) => pct(f.c5), (f) => f.c5, false, "cagr"],
+  ["Volatility (3y)", (f) => pct(f.v), (f) => f.v, true, "volatility"],
+  ["Max fall (5y)", (f) => pct(f.dd, 0), (f) => f.dd, false, "drawdown"],
+  ["Sortino ratio (3y)", (f) => (f.so === null ? "—" : f.so.toFixed(2)), (f) => f.so, false, "sortino"],
+  ["Beat group median (rolling 12m)", (f) => pct(f.cs, 0), (f) => f.cs, false, "consistency"],
+  ["Tracking vs peers", (f) => pct(f.tr, 2), (f) => f.tr, true, "tracking"],
+  ["Years of history", (f) => f.y.toFixed(1), (f) => f.y, false, "confidence"],
+  ["Rank in group", (f) => String(f.r), (f) => f.r, true, "percentile"],
 ];
 
 export function FundScreenerClient({ funds, buckets, navDate, methodology, source }: { funds: FundLite[]; buckets: Record<string, BucketSummary>; navDate: string | null; methodology: string; source: string }) {
@@ -57,9 +58,10 @@ export function FundScreenerClient({ funds, buckets, navDate, methodology, sourc
         <select aria-label="Sort by" value={sort} onChange={(e) => setSort(e.target.value)} className={selectCls}>{SORTS.map(([k, l]) => <option key={k} value={k}>Sort: {l}</option>)}</select>
         <select aria-label="Minimum history" value={minYears} onChange={(e) => setMinYears(Number(e.target.value))} className={selectCls}>{[0, 3, 5, 10].map((y) => <option key={y} value={y}>{y ? `${y}+ years` : "Any age"}</option>)}</select>
       </div>
+      <Explain>Each fund is compared only with similar funds (the group you pick). The <Term id="score">score</Term> rewards low <Term id="ter">expense ratio</Term> most, then steady performance against peers and smaller falls; past returns count least because they rarely repeat. All funds are <Term id="direct">direct plans</Term> (lowest cost). Tick up to four to compare.</Explain>
       {!q && med && <p className="mt-4 text-xs text-white/50">Group median · expense {med.ter != null ? `${med.ter.toFixed(2)}%` : "—"} · 1y {pct(med.cagr1)} · 3y {pct(med.cagr3)} · 5y {pct(med.cagr5)} · volatility {pct(med.vol3)}{navDate ? ` · NAV ${navDate}` : ""}</p>}
       <div className="mt-5 overflow-x-auto"><table className="w-full min-w-[860px] text-left text-sm">
-        <thead className="text-xs uppercase tracking-[.12em] text-white/45"><tr><th className="py-2 pr-2">Compare</th><th className="py-2 pr-3">#</th><th className="py-2 pr-3">Fund</th><th className="py-2 pr-3">Score</th><th className="py-2 pr-3 text-right">Expense</th><th className="py-2 pr-3 text-right">1y</th><th className="py-2 pr-3 text-right">3y</th><th className="py-2 pr-3 text-right">5y</th><th className="py-2 pr-3 text-right">Volatility</th><th className="py-2 pr-3 text-right">Max fall</th><th className="py-2 pr-3 text-right">Years</th><th className="py-2 text-right">Confidence</th></tr></thead>
+        <thead className="text-xs uppercase tracking-[.12em] text-white/45"><tr><th className="py-2 pr-2">Compare</th><th className="py-2 pr-3">#</th><th className="py-2 pr-3">Fund</th><th className="py-2 pr-3"><Term id="score">Score</Term></th><th className="py-2 pr-3 text-right"><Term id="ter">Expense</Term></th><th className="py-2 pr-3 text-right">1y</th><th className="py-2 pr-3 text-right"><Term id="cagr">3y/yr</Term></th><th className="py-2 pr-3 text-right"><Term id="cagr">5y/yr</Term></th><th className="py-2 pr-3 text-right"><Term id="volatility">Vol</Term></th><th className="py-2 pr-3 text-right"><Term id="drawdown">Max fall</Term></th><th className="py-2 pr-3 text-right">Years</th><th className="py-2 text-right"><Term id="confidence">Confidence</Term></th></tr></thead>
         <tbody>{rows.slice(0, limit).map((f) => <tr key={f.c} className={cn("border-t border-white/8", picked.includes(f.c) && "bg-amber-100/5")}>
           <td className="py-2 pr-2"><input type="checkbox" aria-label={`Compare ${f.n}`} checked={picked.includes(f.c)} disabled={!picked.includes(f.c) && picked.length >= 4} onChange={() => toggle(f.c)} className="h-4 w-4 accent-amber-200" /></td>
           <td className="py-2 pr-3 text-white/45">{f.r}</td><td className="py-2 pr-3"><p className="text-white/90">{f.n}</p>{q && <p className="text-xs text-white/40">{buckets[f.b]?.label}</p>}</td><td className="py-2 pr-3"><ScoreBar score={f.s} /></td>
@@ -71,8 +73,8 @@ export function FundScreenerClient({ funds, buckets, navDate, methodology, sourc
     {pickedFunds.length > 0 && <Card className="premium-card" >
       <div id="compare" className="flex flex-wrap items-end justify-between gap-3"><div><h2 className="font-display text-2xl">Side-by-side comparison</h2><p className="mt-1 text-sm text-white/55">Best value in each row is highlighted. Tick up to four funds in any group.</p></div><button type="button" onClick={() => setPicked([])} className="text-sm text-white/55 hover:text-white">Clear</button></div>
       <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[640px] text-left text-sm"><thead><tr><th className="py-2 pr-3 text-xs uppercase tracking-[.12em] text-white/45">Metric</th>{pickedFunds.map((f) => <th key={f.c} className="py-2 pr-3 align-bottom font-semibold text-white">{f.n}<p className="text-xs font-normal text-white/45">{buckets[f.b]?.label}</p></th>)}</tr></thead>
-        <tbody>{ROWS.map(([label, show, val, low]) => { const vals = pickedFunds.map(val).filter((x): x is number => x !== null); const best = vals.length > 1 ? (low ? Math.min(...vals) : Math.max(...vals)) : null; return <tr key={label} className="border-t border-white/8"><td className="py-2 pr-3 text-white/60">{label}</td>{pickedFunds.map((f) => <td key={f.c} className={cn("py-2 pr-3 tabular-nums", best !== null && val(f) === best ? "font-semibold text-emerald-200" : "text-white/85")}>{show(f)}</td>)}</tr>; })}
-          <tr className="border-t border-white/8"><td className="py-2 pr-3 text-white/60">Cost on ₹10 L over 10 years*</td>{pickedFunds.map((f) => <td key={f.c} className="py-2 pr-3 tabular-nums text-white/85">{f.t === null ? "—" : inr(1e6 * (Math.pow(1.12, 10) - Math.pow(1.12 - f.t / 100, 10)))}</td>)}</tr>
+        <tbody>{ROWS.map(([label, show, val, low, term]) => { const vals = pickedFunds.map(val).filter((x): x is number => x !== null); const best = vals.length > 1 ? (low ? Math.min(...vals) : Math.max(...vals)) : null; return <tr key={label} className="border-t border-white/8"><td className="py-2 pr-3 text-white/60"><Term id={term}>{label}</Term></td>{pickedFunds.map((f) => <td key={f.c} className={cn("py-2 pr-3 tabular-nums", best !== null && val(f) === best ? "font-semibold text-emerald-200" : "text-white/85")}>{show(f)}</td>)}</tr>; })}
+          <tr className="border-t border-white/8"><td className="py-2 pr-3 text-white/60"><Term id="ter">Cost on ₹10 L over 10 years*</Term></td>{pickedFunds.map((f) => <td key={f.c} className="py-2 pr-3 tabular-nums text-white/85">{f.t === null ? "—" : inr(1e6 * (Math.pow(1.12, 10) - Math.pow(1.12 - f.t / 100, 10)))}</td>)}</tr>
         </tbody></table></div>
       <p className="mt-3 text-xs text-white/45">*Value lost to the expense ratio if the portfolio earned 12% a year before costs. Expense ratio = base expense ratio plus GST for the direct plan.</p>
     </Card>}

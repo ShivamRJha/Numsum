@@ -43,7 +43,11 @@ export type BucketSummary = {
   top?: FundTop[];
 };
 
+/** One data-quality check recorded with each refresh. */
+export type DataCheck = { name: string; status: "pass" | "warn" | "fail"; detail: string };
+
 export type FundSummaryDoc = {
+  checks?: DataCheck[];
   version?: number;
   updatedAt: string;
   navDate: string;
@@ -65,6 +69,7 @@ export function summaryFunds(doc: FundSummaryDoc | null): FundLite[] {
 }
 
 export type StockSummaryDoc = {
+  checks?: DataCheck[];
   version: number;
   updatedAt: string;
   asOf: string; // latest price date

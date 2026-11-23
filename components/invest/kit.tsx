@@ -5,11 +5,11 @@ export const num = (x: number | null | undefined, d = 2) => (x === null || x ===
 export const signed = (x: number | null | undefined, d = 1) => (x === null || x === undefined || !Number.isFinite(x) ? "—" : `${x > 0 ? "+" : ""}${(x * 100).toFixed(d)}%`);
 export const tone = (x: number | null | undefined) => (x === null || x === undefined ? "text-white/60" : x > 0 ? "text-emerald-200" : x < 0 ? "text-red-200" : "text-white/80");
 
-export function Stat({ label, value, hint, className }: { label: string; value: React.ReactNode; hint?: React.ReactNode; className?: string }) {
-  return <div className={cn("rounded-2xl border border-white/10 bg-white/[0.03] p-4", className)}><p className="text-[11px] uppercase tracking-[.16em] text-white/45">{label}</p><p className="mt-1.5 text-xl font-semibold text-white">{value}</p>{hint && <p className="mt-1 text-xs text-white/45">{hint}</p>}</div>;
+export function Stat({ label, value, hint, className }: { label: React.ReactNode; value: React.ReactNode; hint?: React.ReactNode; className?: string }) {
+  return <div className={cn("rounded-2xl border border-white/10 bg-white/[0.03] p-4", className)}><p className="text-[11px] uppercase tracking-[.16em] text-white/45">{label}</p><p className="mt-1.5 font-mono text-xl font-semibold tabular-nums text-white">{value}</p>{hint && <p className="mt-1 text-xs text-white/45">{hint}</p>}</div>;
 }
 
-const SIGNAL: Record<string, string> = { Strong: "border-emerald-300/40 bg-emerald-400/15 text-emerald-100", Positive: "border-lime-300/30 bg-lime-300/10 text-lime-100", Neutral: "border-white/15 bg-white/5 text-white/75", Mixed: "border-amber-200/30 bg-amber-200/10 text-amber-100", Weak: "border-red-300/30 bg-red-400/10 text-red-100", High: "border-emerald-300/40 bg-emerald-400/15 text-emerald-100", Medium: "border-amber-200/30 bg-amber-200/10 text-amber-100", Low: "border-white/15 bg-white/5 text-white/60" };
+const SIGNAL: Record<string, string> = { Calm: "border-emerald-300/30 bg-emerald-400/10 text-emerald-100", Warm: "border-amber-200/30 bg-amber-200/10 text-amber-100", Hot: "border-orange-300/40 bg-orange-400/15 text-orange-100", Overheated: "border-red-300/50 bg-red-500/20 text-red-100", Strong: "border-emerald-300/40 bg-emerald-400/15 text-emerald-100", Positive: "border-lime-300/30 bg-lime-300/10 text-lime-100", Neutral: "border-white/15 bg-white/5 text-white/75", Mixed: "border-amber-200/30 bg-amber-200/10 text-amber-100", Weak: "border-red-300/30 bg-red-400/10 text-red-100", High: "border-emerald-300/40 bg-emerald-400/15 text-emerald-100", Medium: "border-amber-200/30 bg-amber-200/10 text-amber-100", Low: "border-white/15 bg-white/5 text-white/60" };
 export function Badge({ children, kind }: { children: React.ReactNode; kind?: string }) {
   return <span className={cn("inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium", SIGNAL[kind || String(children)] || "border-white/15 text-white/70")}>{children}</span>;
 }
