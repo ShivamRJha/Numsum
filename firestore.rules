@@ -244,7 +244,7 @@ service cloud.firestore {
     }
     match /enquiries/{id} { allow create: if validEnquiry(); allow read, update, delete: if platformAdmin(); }
     // Market data is written only by the scheduled refresh job (service account bypasses rules); its summary lives in system_documents.
-    match /market_funds/{id} { allow read: if true; allow write: if false; }
+    match /market_funds/{id} { allow read: if true; allow write: if platformAdmin(); }
     // Saved investment plans belong to the signed-in user who created them.
     match /investment_plans/{id} {
       allow read, delete: if signedIn() && resource.data.userId == request.auth.uid;

@@ -15,3 +15,9 @@ const p = plan(DEFAULT_INPUTS);
 const check = plan({ ...DEFAULT_INPUTS, monthlySip: p.requiredSip });
 assert.ok(Math.abs(check.projected - p.target) / p.target < 1e-6, "required SIP hits target");
 console.log("planner tests passed", { target: Math.round(p.target), projected: Math.round(p.projected), requiredSip: Math.round(p.requiredSip), r: p.annualReturn.toFixed(4) });
+// Exclusions and direct stocks keep the allocation at 100%
+const ex = allocation(10, "growth", { exclude: ["gold", "smallmid"], stocksShare: 0.2, indexOnly: true });
+assert.ok(Math.abs(ex.reduce((s, l) => s + l.share, 0) - 1) < 1e-9);
+assert.equal(ex.some((l) => l.bucket === "gold" || l.bucket === "small" || l.bucket === "idx_mid150"), false);
+assert.ok(ex.some((l) => l.bucket === "stocks") && ex.some((l) => l.bucket === "idx_n500"));
+console.log("exclusion tests passed");
