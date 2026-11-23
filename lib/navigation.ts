@@ -19,10 +19,10 @@ export const siteMenu: MenuGroup[] = [
     { label: "All investing tools", href: "/tools", desc: "Stock screener, stock SIP builder, portfolio check" },
   ] },
   { label: "Learn", links: [
-    { label: "All guides", href: "/learn", desc: "Short, plain-language guides" },
+    { label: "API codes academy", href: "/learn/codes", desc: "API 510, 570, 571, 574, 579-1, 580, 581 study modules" },
+    { label: "All guides & search", href: "/learn", desc: "Search everything; short, plain-language guides" },
     { label: "Damage mechanisms library", href: "/learn/damage-mechanisms", desc: "All 69 API 571 mechanisms explained" },
     { label: "Investing terms", href: "/learn/investing", desc: "CAGR, XIRR, Sharpe, P/E and more" },
-    { label: "Knowledge & SOPs", href: "/research", desc: "Approved research, knowledge assets and SOPs" },
   ] },
   { label: "IRIS", links: [
     { label: "IRIS inspection software", href: "/products/iris", desc: "Statutory & reliability inspections — office PC and offline tablet" },

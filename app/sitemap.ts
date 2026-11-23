@@ -4,6 +4,7 @@ import { ENG_TOOLS } from "@/lib/eng/catalog";
 import { DM_LIB, dmSlug } from "@/lib/eng/damage-mechanisms";
 import { GUIDES } from "@/lib/learn/guides";
 import { TERMS } from "@/lib/learn/terms";
+import { CODES, TOPICS } from "@/lib/learn/codes";
 
 type F = MetadataRoute.Sitemap[number]["changeFrequency"];
 const routes: [string, number, F][] = [
@@ -12,6 +13,9 @@ const routes: [string, number, F][] = [
   ...ENG_TOOLS.map((t): [string, number, F] => [`/engineering/${t.slug}`, 0.9, "monthly"]),
   ["/products/iris", 0.9, "monthly"],
   ["/learn", 0.85, "weekly"],
+  ["/learn/codes", 0.9, "monthly"],
+  ...CODES.map((c): [string, number, F] => [`/learn/codes/${c.slug}`, 0.85, "monthly"]),
+  ...TOPICS.map((t): [string, number, F] => [`/learn/codes/topics/${t.slug}`, 0.6, "monthly"]),
   ["/learn/damage-mechanisms", 0.85, "monthly"],
   ...DM_LIB.map((d): [string, number, F] => [`/learn/damage-mechanisms/${dmSlug(d)}`, 0.7, "monthly"]),
   ...GUIDES.map((g): [string, number, F] => [`/learn/${g.slug}`, 0.75, "monthly"]),
