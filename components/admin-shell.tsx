@@ -33,6 +33,13 @@ const sidebarGroups = [
     ],
   },
   {
+    label: "Sales",
+    items: [
+      { label: "Enquiries", href: "/admin/enquiries" },
+      { label: "Market Data", href: "/admin/market-data" },
+    ],
+  },
+  {
     label: "System",
     items: [
       { label: "Users", href: "/admin/users", superOnly: true },

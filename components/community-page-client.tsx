@@ -16,17 +16,13 @@ const filters = [
   ["competition_discussion", "Challenge discussion"],
   ["technical_discussion", "Case study discussion"],
 ] as const;
-const demoThreads: DiscussionThread[] = [
-  { id: "demo-textile-inventory", slug: "demo-textile-inventory", title: "How can a textile MSME reduce dead stock before export season?", body: "Looking for practical inventory classification ideas that do not require a full ERP rollout.", summary: "Public example: a textile inventory discussion asking for low-cost classification ideas.", scopeType: "general", visibility: "public", status: "open", category: "msme_need", tags: ["textile", "inventory"], authorId: "demo", authorName: "Example MSME owner", authorRoleLabel: "msme_owner", moderationStatus: "clean", commentCount: 3 },
-  { id: "demo-research-collaboration", slug: "demo-research-collaboration", title: "Seeking collaborators for low-cost visual inspection research", body: "A researcher wants to validate a camera-based quality inspection method with small manufacturers.", summary: "Public example: research collaboration post linked to quality inspection.", scopeType: "research", visibility: "public", status: "open", category: "research_discussion", tags: ["quality", "computer vision"], authorId: "demo", authorName: "Example researcher", authorRoleLabel: "researcher", moderationStatus: "clean", commentCount: 5 },
-];
 
 export function CommunityPageClient({ threads, category, q }: { threads: DiscussionThread[]; category: string; q: string }) {
   const { user, profile, loading, authReady, requestAuth } = useAuth();
   const [openComposer, setOpenComposer] = useState(false);
   const ready = !loading && authReady;
   const canPost = canParticipateInCommunity(profile);
-  const shownThreads = threads.length ? threads : demoThreads;
+  const shownThreads = threads;
   return <main className="min-h-screen bg-navy px-6 py-10">
     <section className="mx-auto max-w-7xl">
       <p className="text-sm uppercase tracking-[.3em] text-blue-300">Community / Social</p>

@@ -4,21 +4,24 @@ export type NavGroup = { label: string; adminOnly?: boolean; links?: readonly (r
 export const phaseOnePublicLinks = [
   ["For MSMEs", "/for-msmes"],
   ["Challenges", "/challenges"],
-  ["Case Studies", "/case-studies"],
+  ["IRIS Software", "/products/iris"],
+  ["Invest Planner", "/tools/investment-planner"],
   ["Community", "/community"],
   ["About", "/about"],
 ] as const;
 
 export const secondaryPublicLinks = [
+  ["Case Studies", "/case-studies"],
   ["Research & Knowledge", "/research"],
   ["Impact Metrics", "/pilots"],
+  ["Contact", "/contact"],
 ] as const;
 
 export const navGroups: NavGroup[] = [
   { label: "Explore", links: phaseOnePublicLinks },
   { label: "Resources", links: secondaryPublicLinks },
   { label: "Admin", adminOnly: true, sections: [
-    { label: "Phase 2", links: [["Admin Dashboard", "/admin"], ["System Health", "/admin/system-health"], ["Users", "/admin/users"], ["MSME Owners", "/admin/msme-owners"], ["Problems", "/admin/problems"], ["Questionnaires", "/admin/questionnaires"], ["Challenges", "/admin/challenges"], ["Community Moderation", "/admin/community"]] },
+    { label: "Phase 2", links: [["Admin Dashboard", "/admin"], ["System Health", "/admin/system-health"], ["Users", "/admin/users"], ["MSME Owners", "/admin/msme-owners"], ["Problems", "/admin/problems"], ["Questionnaires", "/admin/questionnaires"], ["Challenges", "/admin/challenges"], ["Community Moderation", "/admin/community"], ["Enquiries", "/admin/enquiries"]] },
   ] },
 ];
 export function getVisibleNavLinks(isAdmin: boolean) {
