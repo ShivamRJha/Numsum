@@ -6,15 +6,15 @@
 - `/contact`, `/privacy`, `/terms` — company pages. `/contact?topic=iris_demo` pre-selects a topic.
 
 ## Enquiries (leads)
-- Public forms write to Firestore `enquiries` (create-only for the public, validated by `validEnquiry()` in `firestore.rules`).
+- Public forms write to Firestore `enquiries` (create-only for the public, validated by `validEnquiry()` in `firestore.rules`). Until those rules are deployed, the form falls back to `career_applications` with `kind: "enquiry"`; the admin page shows both.
 - Admins manage them at **Admin › Sales › Enquiries** (status, internal note, CSV export).
 - Set `NEXT_PUBLIC_CONTACT_EMAIL` in Vercel to show a public e-mail address.
 
 ## Market data
 - `scripts/refresh-market-data.ts` downloads the AMFI NAV file and NAV history (api.mfapi.in), scores direct-plan growth funds within each bucket (`lib/invest/buckets.ts`) and writes:
   - `market_funds/{schemeCode}` — every scored fund,
-  - `market_meta/fund_summary` — top 25 per bucket + medians (the planner reads only this document),
-  - `market_meta/refresh_status` — last run result (shown at **Admin › Sales › Market Data**).
+  - `system_documents/market_fund_summary` — top 25 per bucket + medians (the planner reads only this document),
+  - `system_documents/market_refresh_status` — last run result (shown at **Admin › Sales › Market Data**).
 - Runs nightly via `.github/workflows/refresh-market-data.yml` (00:40 IST) with the `FIREBASE_SERVICE_ACCOUNT_JSON` secret and `FIREBASE_PROJECT_ID` variable. Run it manually from the Actions tab to refresh now.
 - Local dry run: `npx tsx scripts/refresh-market-data.ts --dry-run --limit=40`.
 - Tests: `npx tsx tests/invest/market-data.test.ts && npx tsx tests/invest/planner.test.ts`.

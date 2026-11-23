@@ -32,13 +32,13 @@ export default function AdminEnquiriesPage() {
 
   async function setRowStatus(row: Enquiry, next: EnquiryStatus) {
     setBusy(row.id);
-    try { await updateEnquiry(row.id, { status: next }); setRows((list) => list.map((r) => r.id === row.id ? { ...r, status: next } : r)); }
+    try { await updateEnquiry(row, { status: next }); setRows((list) => list.map((r) => r.id === row.id ? { ...r, status: next } : r)); }
     catch (e) { setError(e instanceof Error ? e.message : "Update failed."); }
     finally { setBusy(""); }
   }
   async function saveNote(row: Enquiry, note: string) {
     if (note === (row.adminNote || "")) return;
-    try { await updateEnquiry(row.id, { adminNote: note.slice(0, 2000) }); setRows((list) => list.map((r) => r.id === row.id ? { ...r, adminNote: note } : r)); } catch { setError("Could not save the note."); }
+    try { await updateEnquiry(row, { adminNote: note.slice(0, 2000) }); setRows((list) => list.map((r) => r.id === row.id ? { ...r, adminNote: note } : r)); } catch { setError("Could not save the note."); }
   }
   function download() {
     const blob = new Blob([toCsv(shown)], { type: "text/csv;charset=utf-8" });

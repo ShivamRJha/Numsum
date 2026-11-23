@@ -1,4 +1,8 @@
 /** Shapes stored in Firestore by scripts/refresh-market-data.ts and read by the planner. */
+// system_documents is publicly readable and admin/service-account writable in firestore.rules.
+export const META_COLLECTION = "system_documents";
+export const SUMMARY_DOC = "market_fund_summary";
+export const STATUS_DOC = "market_refresh_status";
 export type FundRow = {
   code: string;
   name: string;
@@ -21,7 +25,7 @@ export type FundRow = {
   rank: number;
 };
 
-/** Compact copy in market_meta/fund_summary (one read for the whole planner). */
+/** Compact copy in system_documents/market_fund_summary (one read for the whole planner). */
 export type FundTop = { c: string; n: string; s: number | null; r: number; c1: number | null; c3: number | null; c5: number | null; v: number | null; dd: number | null; y: number; cf: FundRow["confidence"] };
 
 export type BucketSummary = {

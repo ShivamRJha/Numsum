@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { doc, getDoc } from "firebase/firestore";
 import { PlannerClient } from "@/components/invest/planner-client";
 import { db } from "@/lib/firebase";
-import type { FundSummaryDoc } from "@/lib/invest/types";
+import { META_COLLECTION, SUMMARY_DOC, type FundSummaryDoc } from "@/lib/invest/types";
 
 export const metadata: Metadata = {
   title: "Investment Planner — Goal SIP Calculator & Fund Scores | NumSum Labs",
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 async function loadSummary(): Promise<FundSummaryDoc | null> {
   try {
-    const snap = await getDoc(doc(db, "market_meta", "fund_summary"));
+    const snap = await getDoc(doc(db, META_COLLECTION, SUMMARY_DOC));
     return snap.exists() ? (snap.data() as FundSummaryDoc) : null;
   } catch {
     return null;

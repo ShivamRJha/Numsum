@@ -6,13 +6,13 @@
  *   --limit=40                                        # only the first N funds (testing)
  *
  * Sources: AMFI daily NAV file (scheme list, categories, latest NAV) and api.mfapi.in (NAV history).
- * Writes: market_funds/{schemeCode}, market_meta/fund_summary, market_meta/refresh_status.
+ * Writes: market_funds/{schemeCode}, system_documents/market_fund_summary, system_documents/market_refresh_status.
  * Credentials: Application Default Credentials (GOOGLE_APPLICATION_CREDENTIALS) for FIREBASE_PROJECT_ID.
  */
 import { writeFileSync } from "node:fs";
 import { BUCKETS, BUCKET_BY_KEY, classifyScheme, type FundKind } from "../lib/invest/buckets";
 import { annualVol, cagr, historyYears, maxDrawdown, median, monthEnds, monthKeys, monthlyReturns, parseMfapiHistory, percentiles, sortino, std, weighted, type NavPoint } from "../lib/invest/metrics";
-import type { BucketSummary, FundRow, FundSummaryDoc, RefreshStatusDoc } from "../lib/invest/types";
+import { META_COLLECTION, STATUS_DOC, SUMMARY_DOC, type BucketSummary, type FundRow, type FundSummaryDoc, type RefreshStatusDoc } from "../lib/invest/types";
 
 const AMFI_URLS = ["https://portal.amfiindia.com/spages/NAVAll.txt", "https://www.amfiindia.com/spages/NAVAll.txt", "https://portal.amfiindia.com/spages/Original_NAVAll.txt"];
 const MFAPI = (code: string) => `https://api.mfapi.in/mf/${code}`;
@@ -246,8 +246,8 @@ async function main() {
   for (const row of rows) { batch.set(col.doc(row.code), { ...row, kind: BUCKET_BY_KEY[row.bucket]?.kind || "", updatedAt: summary.updatedAt }); if (++n >= 400) await flush(); }
   for (const id of existing) if (!keep.has(id)) { batch.delete(col.doc(id)); if (++n >= 400) await flush(); }
   await flush();
-  await db.collection("market_meta").doc("fund_summary").set(summary);
-  await db.collection("market_meta").doc("refresh_status").set(status);
+  await db.collection(META_COLLECTION).doc(SUMMARY_DOC).set(summary);
+  await db.collection(META_COLLECTION).doc(STATUS_DOC).set(status);
   console.log(`Firestore updated. ${status.message} (${durationSec}s)`);
 }
 
@@ -258,7 +258,7 @@ if (isMain) {
     if (!DRY) {
       try {
         const db = await firestore();
-        await db.collection("market_meta").doc("refresh_status").set({ lastRunAt: new Date().toISOString(), ok: false, message: String((err as Error).message || err).slice(0, 500), fundCount: 0, failed: 0, durationSec: 0 } satisfies RefreshStatusDoc);
+        await db.collection(META_COLLECTION).doc(STATUS_DOC).set({ lastRunAt: new Date().toISOString(), ok: false, message: String((err as Error).message || err).slice(0, 500), fundCount: 0, failed: 0, durationSec: 0 } satisfies RefreshStatusDoc);
       } catch { /* status write is best-effort */ }
     }
     process.exit(1);

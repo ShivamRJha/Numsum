@@ -136,8 +136,9 @@ async function run() {
     await assertFails(addDoc(collection(publicDb, "enquiries"), { ...lead, role: "admin" }));
     await assertFails(getDocs(collection(publicDb, "enquiries")));
     await assertSucceeds(getDocs(collection(adminDb, "enquiries")));
-    await assertSucceeds(getDoc(doc(publicDb, "market_meta", "fund_summary")));
-    await assertFails(setDoc(doc(adminDb, "market_meta", "fund_summary"), { fundCount: 1 }));
+    await assertSucceeds(getDoc(doc(publicDb, "system_documents", "market_fund_summary")));
+    await assertFails(setDoc(doc(publicDb, "system_documents", "market_fund_summary"), { fundCount: 1 }));
+    await assertSucceeds(getDoc(doc(publicDb, "market_funds", "any-fund")));
 
     await assertSucceeds(getDoc(doc(superAdminDb, "problem_admin_metadata", "private-problem")));
     const result = await getDoc(doc(superAdminDb, "unmatched_collection", "anything"));

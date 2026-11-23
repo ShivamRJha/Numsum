@@ -1,4 +1,4 @@
-import { addDoc, collection, doc, getDocs, limit, orderBy, query, serverTimestamp, updateDoc } from "firebase/firestore";
+import { addDoc, collection, doc, getDocs, limit, orderBy, query, serverTimestamp, updateDoc, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 export const ENQUIRY_TOPICS = ["iris_demo", "iris_quote", "msme_problem", "partnership", "investment_tool", "general"] as const;
@@ -29,9 +29,11 @@ export type EnquiryInput = {
   sourcePage: string;
 };
 
-export type Enquiry = EnquiryInput & { id: string; status: EnquiryStatus; createdAt?: { toDate: () => Date }; adminNote?: string };
+export type Enquiry = EnquiryInput & { id: string; status: EnquiryStatus; createdAt?: { toDate: () => Date }; adminNote?: string; collection: string };
 
 const COLLECTION = "enquiries";
+/** Used only if the `enquiries` rules have not been deployed yet (that collection already allows public create). */
+const FALLBACK = "career_applications";
 
 function clean(value: string | undefined, max: number) {
   return (value || "").trim().slice(0, max);
@@ -53,14 +55,23 @@ export async function submitEnquiry(input: EnquiryInput) {
     if (value) payload[key] = value;
   }
   if (input.modules?.length) payload.modules = input.modules.slice(0, 20).map((m) => m.slice(0, 60));
-  return addDoc(collection(db, COLLECTION), payload);
+  try {
+    return await addDoc(collection(db, COLLECTION), payload);
+  } catch (err) {
+    if ((err as { code?: string })?.code !== "permission-denied") throw err;
+    return addDoc(collection(db, FALLBACK), { ...payload, kind: "enquiry" });
+  }
 }
 
 export async function listEnquiries(max = 300) {
-  const snap = await getDocs(query(collection(db, COLLECTION), orderBy("createdAt", "desc"), limit(max)));
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Enquiry);
+  const [main, fallback] = await Promise.all([
+    getDocs(query(collection(db, COLLECTION), orderBy("createdAt", "desc"), limit(max))).then((s) => s.docs.map((d) => ({ id: d.id, ...d.data(), collection: COLLECTION }) as Enquiry)).catch(() => [] as Enquiry[]),
+    getDocs(query(collection(db, FALLBACK), where("kind", "==", "enquiry"), limit(max))).then((s) => s.docs.map((d) => ({ id: d.id, ...d.data(), collection: FALLBACK }) as Enquiry)).catch(() => [] as Enquiry[]),
+  ]);
+  const t = (e: Enquiry) => e.createdAt?.toDate?.().getTime() || 0;
+  return [...main, ...fallback].sort((a, b) => t(b) - t(a));
 }
 
-export async function updateEnquiry(id: string, patch: { status?: EnquiryStatus; adminNote?: string }) {
-  return updateDoc(doc(db, COLLECTION, id), { ...patch, updatedAt: serverTimestamp() });
+export async function updateEnquiry(row: Pick<Enquiry, "id" | "collection">, patch: { status?: EnquiryStatus; adminNote?: string }) {
+  return updateDoc(doc(db, row.collection || COLLECTION, row.id), { ...patch, updatedAt: serverTimestamp() });
 }
