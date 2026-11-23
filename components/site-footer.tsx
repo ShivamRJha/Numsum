@@ -5,7 +5,7 @@ import { contactEmail } from "@/lib/site";
 import { CookieSettingsLink } from "@/components/analytics";
 
 const platform = [["Engineering tools", "/engineering"], ["Vessel thickness", "/engineering/pressure-vessel-thickness-calculator"], ["Pipe thickness", "/engineering/pipe-thickness-calculator"], ["Remaining life", "/engineering/remaining-life-calculator"], ["Hydrotest pressure", "/engineering/hydrotest-pressure-calculator"], ["Steam trap loss", "/engineering/steam-trap-loss-calculator"], ["Damage mechanisms", "/engineering/damage-mechanism-screening"]] as const;
-const resources = [["Learn", "/learn"], ["API 571 library", "/learn/damage-mechanisms"], ["Investing terms", "/learn/investing"], ["For MSMEs", "/for-msmes"], ["Challenges", "/challenges"], ["Case studies", "/case-studies"], ["Knowledge & research", "/research"]] as const;
+const resources = [["API codes academy", "/learn/codes"], ["Learn", "/learn"], ["API 571 library", "/learn/damage-mechanisms"], ["Investing terms", "/learn/investing"], ["For MSMEs", "/for-msmes"], ["Challenges", "/challenges"], ["Case studies", "/case-studies"], ["Knowledge & research", "/research"]] as const;
 const products = [["IRIS inspection software", "/products/iris"], ["Goal planner", "/tools/investment-planner"], ["Fund screener", "/tools/funds"], ["Stock screener", "/tools/stocks"], ["Stock analyzer", "/tools/stock-analyzer"], ["Portfolio check", "/tools/portfolio"]] as const;
 const company = [["About", "/about"], ["Contact", "/contact"], ["Privacy policy", "/privacy"], ["Terms of use", "/terms"]] as const;
 
