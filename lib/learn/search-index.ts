@@ -4,6 +4,8 @@ import { DM_LIB, DM_GRP, dmSlug } from "@/lib/eng/damage-mechanisms";
 import { GUIDES } from "@/lib/learn/guides";
 import { TERMS } from "@/lib/learn/terms";
 import { ENG_TOOLS } from "@/lib/eng/catalog";
+import { CURATED } from "@/lib/asme/curated";
+import SPECS from "@/lib/asme/spec-index.json";
 
 import type { SearchItem } from "@/lib/learn/search";
 export type { SearchItem };
@@ -19,6 +21,10 @@ export function buildSearchIndex(): SearchItem[] {
   for (const g of GUIDES) out.push({ k: "Guide", t: g.title, s: g.description, h: `/learn/${g.slug}`, x: `${g.title} ${g.description} ${g.sections.map(([h, p]) => `${h} ${p.join(" ")}`).join(" ")}` });
   for (const t of TERMS) out.push({ k: "Term", t: t.term, s: t.simple, h: `/learn/investing/${t.slug}`, x: `${t.term} ${t.simple} ${t.pro}` });
   for (const t of ENG_TOOLS) out.push({ k: "Tool", t: t.h1, s: t.short, h: `/engineering/${t.slug}`, x: `${t.name} ${t.description} ${t.codes}` });
+  for (const sp of SPECS as { id: string; full: string; title: string; form: string; family: string; basis: string }[]) {
+    const c = CURATED.find((x) => x.id === sp.id);
+    out.push({ k: "Spec", t: `${sp.full} — ${sp.title}`, s: c ? `${c.grades}. ${c.condition}` : `${sp.form} · ${sp.family}${sp.basis ? ` · based on ${sp.basis}` : ""}`, h: `/engineering/material-spec-finder#${encodeURIComponent(sp.id)}`, x: `${sp.id} ${sp.full} ${sp.title} ${sp.form} ${sp.family} ${c ? `${c.grades} ${c.props} ${c.tests.map((t) => t[0]).join(" ")}` : ""}` });
+  }
   return out;
 }
 

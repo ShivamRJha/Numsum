@@ -9,16 +9,16 @@ import { JsonLd } from "@/lib/seo";
 import { siteUrl } from "@/lib/site";
 
 export const dynamic = "force-static";
-const title = "API Inspection Codes Academy — Learn API 510, 570, 571, 574, 579-1, 580 & 581 Free";
-const description = "Free study modules on the API inspection and integrity codes: pressure vessel and piping inspection, damage mechanisms, RBI, and fitness-for-service — with clause references, worked examples, self-checks and search.";
+const title = "API & ASME Codes Academy — Learn API 510, 570, 571, 574, 579-1, 580, 581, ASME Section II & V Free";
+const description = "Free study modules on the API inspection and integrity codes and ASME Section II (materials) and Section V (NDE): inspection, damage mechanisms, RBI, fitness-for-service, material specifications, test requirements and NDE methods — with clause references, worked examples, self-checks and search.";
 export const metadata: Metadata = { title, description, alternates: { canonical: "/learn/codes" }, openGraph: { title, description, url: "/learn/codes" } };
 
 export default function CodesHub() {
   const chapterCount = CODES.reduce((n, c) => n + c.chapters.length, 0);
   return <>
-    <JsonLd data={{ "@context": "https://schema.org", "@type": "ItemList", name: "API inspection codes study modules", itemListElement: CODES.map((c, i) => ({ "@type": "ListItem", position: i + 1, url: `${siteUrl}/learn/codes/${c.slug}`, name: c.title })) }} />
-    <Crumbs items={[["API codes academy", "/learn/codes"]]} />
-    <header className="mt-4 max-w-3xl"><h1 className="font-display text-4xl font-bold tracking-[-.04em] text-white md:text-5xl">API inspection codes academy</h1><p className="mt-4 text-lg leading-8 text-white/70">Seven study modules, {chapterCount} chapters, one connected picture. Learn what each code says, why, and how they work together — with clause references, worked examples and a quick self-check at the end of each module.</p></header>
+    <JsonLd data={{ "@context": "https://schema.org", "@type": "ItemList", name: "API and ASME codes study modules", itemListElement: CODES.map((c, i) => ({ "@type": "ListItem", position: i + 1, url: `${siteUrl}/learn/codes/${c.slug}`, name: c.title })) }} />
+    <Crumbs items={[["Codes academy", "/learn/codes"]]} />
+    <header className="mt-4 max-w-3xl"><h1 className="font-display text-4xl font-bold tracking-[-.04em] text-white md:text-5xl">API & ASME codes academy</h1><p className="mt-4 text-lg leading-8 text-white/70">{CODES.length} study modules, {chapterCount} chapters, one connected picture. Learn what each code says, why, and how they work together — with clause references, worked examples and a quick self-check at the end of each module.</p></header>
     <div className="mt-8 max-w-3xl"><SearchBox /></div>
 
     <section className="mt-12"><h2 className="font-display text-2xl font-semibold text-white">How the codes fit together</h2><p className="mt-2 text-white/60">Follow one piece of equipment through its integrity cycle. Click a code to open its module.</p><div className="mt-5"><CodeFlow /></div></section>

@@ -6,11 +6,13 @@ import { API_574 } from "./api-574";
 import { API_579 } from "./api-579";
 import { API_580 } from "./api-580";
 import { API_581 } from "./api-581";
+import { ASME_II } from "./asme-ii";
+import { ASME_V } from "./asme-v";
 
 export type { Chapter, CodeModule, TopicKey } from "../codes-types";
 
 /** In learning order. */
-export const CODES: CodeModule[] = [API_571, API_580, API_581, API_510, API_570, API_574, API_579].sort((a, b) => a.order - b.order);
+export const CODES: CodeModule[] = [API_571, API_580, API_581, API_510, API_570, API_574, API_579, ASME_II, ASME_V].sort((a, b) => a.order - b.order);
 export const codeBySlug = (s: string) => CODES.find((c) => c.slug === s);
 
 export type Topic = { key: TopicKey; slug: string; name: string; group: string; intro: string };
@@ -25,6 +27,13 @@ export const TOPICS: Topic[] = [
   { key: "cui", slug: "corrosion-under-insulation", name: "Corrosion under insulation", group: "Understand damage", intro: "Where CUI happens, how much to inspect and how it feeds RBI." },
   { key: "high-temp", slug: "high-temperature-damage", name: "High-temperature damage", group: "Understand damage", intro: "Creep, fire damage and other high-temperature effects." },
   { key: "cracks", slug: "cracks-and-brittle-fracture", name: "Cracks and brittle fracture", group: "Understand damage", intro: "Crack-like flaws, blisters, fatigue and brittle fracture." },
+  { key: "materials", slug: "material-selection", name: "Material selection & specifications", group: "Materials & NDE", intro: "How ASME Section II specifications are organised and how to pick the right spec for each product form and service." },
+  { key: "material-tests", slug: "material-test-requirements", name: "Material test requirements", group: "Materials & NDE", intro: "Mandatory and supplementary tests, their frequency, and what the certificate must show." },
+  { key: "consumables", slug: "welding-consumables", name: "Welding consumables", group: "Materials & NDE", intro: "SFA classifications, the tests behind them and matching filler to base metal." },
+  { key: "allowable-stress", slug: "allowable-stress", name: "Allowable stress (Part D)", group: "Materials & NDE", intro: "How Part D tables are built and how allowable stresses are derived." },
+  { key: "nde", slug: "nde-methods", name: "NDE methods", group: "Materials & NDE", intro: "RT, UT, PT, MT, ET, VT, leak testing and advanced methods — what each finds and the key requirements." },
+  { key: "nde-procedure", slug: "nde-procedures-and-personnel", name: "NDE procedures & personnel", group: "Materials & NDE", intro: "Written procedures, essential variables, demonstrations, qualification and records." },
+  { key: "qap", slug: "quality-assurance-plans", name: "Quality assurance plans (QAP)", group: "Materials & NDE", intro: "Writing material and NDE lines with references, frequency, acceptance and hold/witness points." },
   { key: "methods", slug: "inspection-methods", name: "Inspection methods", group: "Inspect", intro: "Internal, on-stream and external inspection, NDE choice and inspection effectiveness." },
   { key: "cml", slug: "condition-monitoring-locations", name: "CMLs and thickness measurement", group: "Inspect", intro: "Choosing, numbering and measuring condition monitoring locations." },
   { key: "piping-components", slug: "piping-components", name: "Piping components", group: "Inspect", intro: "Valves, fittings, flanges, joints, small-bore piping and supports." },
@@ -42,7 +51,7 @@ export const TOPICS: Topic[] = [
 ];
 export const topicBySlug = (s: string) => TOPICS.find((t) => t.slug === s);
 export const topicByKey = (k: TopicKey) => TOPICS.find((t) => t.key === k)!;
-export const TOPIC_GROUPS = ["Plan", "Understand damage", "Inspect", "Evaluate", "Act"];
+export const TOPIC_GROUPS = ["Plan", "Understand damage", "Inspect", "Evaluate", "Act", "Materials & NDE"];
 
 export function chaptersForTopic(k: TopicKey): { code: CodeModule; ch: Chapter }[] {
   return CODES.flatMap((code) => code.chapters.filter((ch) => ch.tags.includes(k)).map((ch) => ({ code, ch })));
@@ -52,7 +61,7 @@ export function chaptersForTopic(k: TopicKey): { code: CodeModule; ch: Chapter }
 export const FLOW: { step: string; title: string; text: string; codes: string[] }[] = [
   { step: "1", title: "Identify damage", text: "List the credible damage mechanisms for each circuit.", codes: ["api-571-damage-mechanisms"] },
   { step: "2", title: "Rank risk", text: "Estimate probability and consequence; decide where inspection matters most.", codes: ["api-580-risk-based-inspection", "api-581-rbi-methodology"] },
-  { step: "3", title: "Plan & inspect", text: "Write the plan, choose methods and CMLs, inspect vessels and piping.", codes: ["api-510-pressure-vessel-inspection", "api-570-piping-inspection", "api-574-piping-inspection-practices"] },
+  { step: "3", title: "Plan & inspect", text: "Write the plan, choose methods and CMLs, inspect vessels and piping.", codes: ["api-510-pressure-vessel-inspection", "api-570-piping-inspection", "api-574-piping-inspection-practices", "asme-section-v-nde"] },
   { step: "4", title: "Evaluate", text: "Corrosion rate, remaining life, MAWP — and fitness-for-service when damage goes beyond the simple rules.", codes: ["api-510-pressure-vessel-inspection", "api-570-piping-inspection", "api-579-fitness-for-service"] },
-  { step: "5", title: "Act & update", text: "Run, rerate, repair or replace; record it and update the RBI and the plan.", codes: ["api-510-pressure-vessel-inspection", "api-570-piping-inspection", "api-580-risk-based-inspection"] },
+  { step: "5", title: "Act & update", text: "Run, rerate, repair or replace; record it and update the RBI and the plan.", codes: ["api-510-pressure-vessel-inspection", "api-570-piping-inspection", "asme-section-ii-materials", "api-580-risk-based-inspection"] },
 ];

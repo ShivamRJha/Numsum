@@ -11,6 +11,8 @@ export const siteMenu: MenuGroup[] = [
     { label: "Pipe wall thickness", href: "/engineering/pipe-thickness-calculator", desc: "Required wall and schedule — ASME B31.3" },
     { label: "Remaining life", href: "/engineering/remaining-life-calculator", desc: "Corrosion rate and next inspection — API 510/570/653" },
     { label: "Damage mechanisms", href: "/engineering/damage-mechanism-screening", desc: "Screen all 69 API 571 mechanisms" },
+    { label: "Material spec finder", href: "/engineering/material-spec-finder", desc: "Every ASME Section II spec, tests and options" },
+    { label: "QAP builder", href: "/engineering/qap-builder", desc: "Material & NDE quality plan → Excel / PDF" },
   ] },
   { label: "Investing", links: [
     { label: "Goal planner", href: "/tools/investment-planner", desc: "Monthly SIP, allocation and fund picks for a goal" },
@@ -19,7 +21,7 @@ export const siteMenu: MenuGroup[] = [
     { label: "All investing tools", href: "/tools", desc: "Stock screener, stock SIP builder, portfolio check" },
   ] },
   { label: "Learn", links: [
-    { label: "API codes academy", href: "/learn/codes", desc: "API 510, 570, 571, 574, 579-1, 580, 581 study modules" },
+    { label: "Codes academy", href: "/learn/codes", desc: "API 510–581, ASME Section II & V study modules" },
     { label: "All guides & search", href: "/learn", desc: "Search everything; short, plain-language guides" },
     { label: "Damage mechanisms library", href: "/learn/damage-mechanisms", desc: "All 69 API 571 mechanisms explained" },
     { label: "Investing terms", href: "/learn/investing", desc: "CAGR, XIRR, Sharpe, P/E and more" },

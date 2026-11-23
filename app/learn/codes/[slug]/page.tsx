@@ -24,7 +24,7 @@ export default async function CodePage({ params }: { params: Promise<{ slug: str
   const prev = CODES[i - 1], next = CODES[i + 1];
   return <>
     <JsonLd data={[articleLd({ title: c.title, description: c.description, path, about: c.code }), faqLd(c.quiz)]} />
-    <Crumbs items={[["API codes academy", "/learn/codes"], [c.short, path]]} />
+    <Crumbs items={[["Codes academy", "/learn/codes"], [c.short, path]]} />
     <header className="mt-4 max-w-4xl">
       <p className="font-mono text-xs text-amber-100/80">MODULE {c.order} OF {CODES.length} · {c.code} · {c.edition}</p>
       <h1 className="mt-2 font-display text-3xl font-bold tracking-[-.03em] text-white md:text-5xl">{c.title}</h1>
