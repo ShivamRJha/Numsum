@@ -53,8 +53,8 @@ export async function fetchFundCandidates(minCount = 200, log: (m: string) => vo
   return { candidates: attachTer(best, ter), source };
 }
 
-export async function fetchNavHistory(code: string): Promise<NavPoint[]> {
-  const json = JSON.parse(await fetchText(`https://api.mfapi.in/mf/${code}`, { tries: 3, timeout: 25_000 })) as { data?: { date: string; nav: string }[] };
+export async function fetchNavHistory(code: string, { tries = 3, timeout = 25_000 } = {}): Promise<NavPoint[]> {
+  const json = JSON.parse(await fetchText(`https://api.mfapi.in/mf/${code}`, { tries, timeout })) as { data?: { date: string; nav: string }[] };
   return parseMfapiHistory(json.data || []);
 }
 
@@ -140,10 +140,10 @@ export class YahooSession {
 }
 
 /** Best-effort refresh of the Nifty 500 list from NSE indices; falls back to the bundled list. */
-export async function fetchUniverse(): Promise<UniverseRow[]> {
+export async function fetchUniverse(timeout = 15_000): Promise<UniverseRow[]> {
   for (const url of ["https://www.niftyindices.com/IndexConstituent/ind_nifty500list.csv", "https://nsearchives.nseindia.com/content/indices/ind_nifty500list.csv"]) {
     try {
-      const text = await fetchText(url, { tries: 1, timeout: 15_000, headers: { referer: "https://www.niftyindices.com/" } });
+      const text = await fetchText(url, { tries: 1, timeout, headers: { referer: "https://www.niftyindices.com/" } });
       const rows = text.trim().split(/\r?\n/).slice(1).map((l) => l.split(",")).filter((p) => p.length >= 3 && p[2]);
       if (rows.length > 400) return rows.map((p) => [p[2].trim(), p[0].trim().replace(/ Ltd\.?$| Limited$/i, ""), p[1].trim()]);
     } catch { /* try next */ }

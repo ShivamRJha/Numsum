@@ -10,7 +10,8 @@ export const maxDuration = 60;
 export async function POST(req: Request) {
   if (!(await verifyFirebaseUser(req))) return unauthorized();
   const body = (await req.json().catch(() => ({}))) as { candidates?: FundCandidate[] };
-  const list = (body.candidates || []).filter((c) => /^\d+$/.test(String(c?.code))).slice(0, 60);
-  const stats = await pool(list, 12, async (c) => { try { return computeFundStats(c, await fetchNavHistory(c.code)); } catch { return null; } });
+  const list = (body.candidates || []).filter((c) => /^\d+$/.test(String(c?.code))).slice(0, 40);
+  const deadline = Date.now() + 50_000;
+  const stats = await pool(list, 10, async (c) => { if (Date.now() > deadline) return null; try { return computeFundStats(c, await fetchNavHistory(c.code, { tries: 2, timeout: 12_000 })); } catch { return null; } });
   return json({ stats: stats.filter(Boolean), failed: stats.filter((s) => !s).length });
 }
