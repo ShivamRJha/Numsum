@@ -7,10 +7,10 @@ export type MenuGroup = { label: string; home: string; blurb: string; base: stri
 export const siteMenu: MenuGroup[] = [
   { label: "Learn", home: "/learn", blurb: "Plain-language study of API and ASME codes, clause by clause.", base: ["/learn"], cta: { label: "Search the library", href: "/learn/search" }, links: [
     { label: "Codes academy", href: "/learn/codes", desc: "API 510, 570, 571, 574, 579, 580, 581 · ASME II & V" },
+    { label: "Clause library", href: "/learn/codes#clauses", desc: "Every clause explained, linked to its lesson" },
     { label: "API 510 / 570 exam prep", href: "/learn/exam-prep", desc: "Study plan, calculation drills, mock exams" },
     { label: "Damage mechanisms", href: "/learn/damage-mechanisms", desc: "All API 571 mechanisms explained" },
     { label: "Guides", href: "/learn", desc: "Short guides on inspection topics" },
-    { label: "Investing terms", href: "/learn/investing", desc: "CAGR, XIRR, Sharpe, P/E and more" },
   ] },
   { label: "Engineering", home: "/engineering", blurb: "Free calculators and planners for inspection and plant engineers.", base: ["/engineering"], cta: { label: "All engineering tools", href: "/engineering" }, links: [
     { label: "Inspection plan generator", href: "/engineering/inspection-plan-generator", desc: "API 510/570 plan as PDF" },
@@ -21,15 +21,6 @@ export const siteMenu: MenuGroup[] = [
     { label: "Material spec finder", href: "/engineering/material-spec-finder", desc: "ASME Section II specs and tests" },
     { label: "QAP builder", href: "/engineering/qap-builder", desc: "Material & NDE quality plan" },
   ] },
-  { label: "Investing", home: "/tools", blurb: "Free Indian stock and mutual fund research — screens, analysis, planning.", base: ["/tools"], cta: { label: "All investing tools", href: "/tools" }, links: [
-    { label: "Stock screener", href: "/tools/stocks", desc: "Filter listed companies by fundamentals" },
-    { label: "Stock analyzer", href: "/tools/stock-analyzer", desc: "Checks before you buy, with news signals" },
-    { label: "Fund screener", href: "/tools/funds", desc: "Compare mutual funds and costs" },
-    { label: "Goal planner", href: "/tools/investment-planner", desc: "Monthly SIP and allocation for a goal" },
-    { label: "Stock SIP builder", href: "/tools/stock-sip", desc: "Plan a basket of stocks" },
-    { label: "Portfolio check", href: "/tools/portfolio", desc: "Diversification and overlap" },
-    { label: "How scores work", href: "/tools/methodology", desc: "Data sources, checks and methodology" },
-  ] },
   { label: "IRIS", home: "/products/iris", blurb: "Inspection and reliability software for process plants.", base: ["/products"], cta: { label: "Book a demo", href: "/products/iris#demo" }, links: [
     { label: "IRIS inspection software", href: "/products/iris", desc: "Statutory and RBI inspections, offline tablet" },
   ] },
@@ -39,6 +30,16 @@ export const siteMenu: MenuGroup[] = [
     { label: "Discussions", href: "/community", desc: "Questions and answers" },
     { label: "Case studies", href: "/case-studies", desc: "Validated outcomes" },
     { label: "MSME intelligence", href: "/msme-intelligence", desc: "Sector, state and cluster data" },
+  ] },
+  { label: "Money Lab", home: "/tools", blurb: "Our after-hours side project, just for fun: stock and fund research toys. Not advice.", base: ["/tools"], cta: { label: "Enter the Money Lab", href: "/tools" }, links: [
+    { label: "Stock screener", href: "/tools/stocks", desc: "Filter listed companies by fundamentals" },
+    { label: "Stock analyzer", href: "/tools/stock-analyzer", desc: "Checks before you buy, with news signals" },
+    { label: "Fund screener", href: "/tools/funds", desc: "Compare mutual funds and costs" },
+    { label: "Goal planner", href: "/tools/investment-planner", desc: "Monthly SIP and allocation for a goal" },
+    { label: "Stock SIP builder", href: "/tools/stock-sip", desc: "Plan a basket of stocks" },
+    { label: "Portfolio check", href: "/tools/portfolio", desc: "Diversification and overlap" },
+    { label: "How scores work", href: "/tools/methodology", desc: "Data sources, checks and methodology" },
+    { label: "Money terms", href: "/learn/investing", desc: "CAGR, XIRR, Sharpe, P/E and more" },
   ] },
 ];
 /** Company links (shown in the menus' footer row, mobile drawer and site footer). */

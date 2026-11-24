@@ -5,6 +5,7 @@ import { codeBySlug } from "@/lib/learn/codes";
 import { CLAUSE_SETS, clauseSet, clauseCount } from "@/lib/learn/clauses";
 import { ClauseGuide } from "@/components/learn/clause-guide";
 import { Crumbs } from "@/components/learn/crumbs";
+import { ModuleTabs } from "@/components/learn/module-tabs";
 import { JsonLd, breadcrumbLd } from "@/lib/seo";
 
 export const dynamic = "force-static";
@@ -35,12 +36,10 @@ export default async function ClausesPage({ params }: { params: Promise<{ slug: 
       <p className="mt-3 text-white/65">All {n} numbered clauses and annexes in order, each in plain English with its key numbers. Search by clause number or word, link straight to any clause, or jump to the lesson that teaches it.</p>
       <div className="mt-4 flex flex-wrap gap-2 text-sm">
         {s.partial ? <span className="rounded-full border border-amber-200/30 bg-amber-200/10 px-3 py-1 text-amber-100">Coverage — {s.partial}</span> : <span className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-emerald-100">100% of clauses covered</span>}
-        <Link href={`/learn/codes/${slug}/train`} className="rounded-full border border-white/15 px-3 py-1 text-white/80 hover:border-white/40">▶ Training mode</Link>
-        <Link href={`/learn/codes/${slug}`} className="rounded-full border border-white/15 px-3 py-1 text-white/80 hover:border-white/40">Module overview</Link>
-        {/^api-5(10|70)/.test(slug) && <Link href={`/learn/exam-prep/${slug.slice(0, 7)}`} className="rounded-full border border-white/15 px-3 py-1 text-white/80 hover:border-white/40">{c.short} exam prep</Link>}
       </div>
     </header>
-    <div className="mt-8"><ClauseGuide slug={slug} rows={s.rows} lessons={lessons} /></div>
+    <ModuleTabs slug={slug} active="clauses" className="mt-6 max-w-4xl" />
+    <div className="mt-8"><ClauseGuide slug={slug} rows={s.rows} lessons={lessons} lessonTitles={Object.fromEntries(c.chapters.map((ch) => [ch.id, ch.title]))} /></div>
     <p className="mt-12 max-w-3xl text-xs text-white/40">Independent study notes written by NumSum Labs. They explain each clause in our own words and are not the text of the standard. Always work from your licensed copy of the current edition, which governs.</p>
   </>;
 }

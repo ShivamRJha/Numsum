@@ -5,7 +5,7 @@ import { ToolHeader } from "@/components/invest/tools-nav";
 import { loadFundSummary, loadStockSummary } from "@/lib/invest/load";
 
 export const metadata: Metadata = {
-  title: "Investment Tools — Goal Planner, Fund & Stock Screeners | NumSum Labs",
+  title: "Money Lab — Goal Planner, Fund & Stock Research Toys | NumSum Labs",
   description: "Free research tools for Indian investors: goal-based SIP planner, mutual fund screener with expense ratios, Nifty 500 stock screener, stock analyzer with investor checklist, and portfolio diversification check.",
   alternates: { canonical: "/tools" },
 };
@@ -24,7 +24,7 @@ export default async function ToolsHub() {
   const [funds, stocks] = await Promise.all([loadFundSummary(), loadStockSummary()]);
   const d = (iso?: string) => (iso ? new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—");
   return <>
-    <ToolHeader eyebrow="Investment tools" title="Research like a disciplined investor." intro={<p>Plan goals, screen funds and stocks, and run the standard checks before you invest — built for regular (SIP) investing over a year or more, on data refreshed and cross-checked every night from AMFI and NSE.</p>}>
+    <ToolHeader eyebrow="Money Lab · our after-hours side project" title="Numbers for fun, off the clock." intro={<p>NumSum is an inspection engineering company; this corner is where we play with money maths in our spare time. Plan goals, screen funds and stocks, and run the standard checks before you invest — built for regular (SIP) investing over a year or more, on data refreshed and cross-checked every night from AMFI and NSE.</p>}>
       <div className="grid grid-cols-2 gap-3 text-sm">
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3"><p className="text-white/45">Funds scored</p><p className="mt-1 text-xl font-semibold">{funds?.fundCount?.toLocaleString("en-IN") ?? "—"}</p><p className="text-xs text-white/40">NAV {d(funds?.navDate)}</p></div>
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3"><p className="text-white/45">Stocks scored</p><p className="mt-1 text-xl font-semibold">{stocks?.count?.toLocaleString("en-IN") ?? "—"}</p><p className="text-xs text-white/40">Prices {d(stocks?.asOf)}</p></div>

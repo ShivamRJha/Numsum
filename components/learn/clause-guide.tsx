@@ -12,7 +12,7 @@ function mark(text: string, q: string) {
 }
 const anchor = (id: string) => `c-${id}`;
 
-export function ClauseGuide({ slug, rows, lessons }: { slug: string; rows: ClauseRow[]; lessons: Record<string, string> }) {
+export function ClauseGuide({ slug, rows, lessons, lessonTitles = {} }: { slug: string; rows: ClauseRow[]; lessons: Record<string, string>; lessonTitles?: Record<string, string> }) {
   // Dotted ids (API style: 7.1.2) nest by their dots. Paragraph ids with a dash (ASME style: T-221.1) nest under
   // the most recent heading row, so a code with "Article / Appendix" headings still gets a sensible outline.
   const all: Row[] = useMemo(() => {
@@ -29,6 +29,14 @@ export function ClauseGuide({ slug, rows, lessons }: { slug: string; rows: Claus
   const tops = useMemo(() => all.filter((r) => r.depth === 1), [all]);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<string | null>(null);
+  // ?lesson=<id> narrows the guide to the clauses a lesson teaches; ?q= pre-fills the search
+  const [lesson, setLesson] = useState<string | null>(null);
+  useEffect(() => {
+    const u = new URLSearchParams(location.search);
+    const l = u.get("lesson"); if (l && Object.values(lessons).includes(l)) setLesson(l);
+    const qq = u.get("q"); if (qq) setQ(qq);
+  }, [lessons]);
+  const clearLesson = () => { setLesson(null); const u = new URL(location.href); u.searchParams.delete("lesson"); history.replaceState(null, "", u); };
 
   useEffect(() => {
     const h = decodeURIComponent(location.hash.slice(1));
@@ -41,16 +49,16 @@ export function ClauseGuide({ slug, rows, lessons }: { slug: string; rows: Claus
     if (el.getBoundingClientRect().top < 0) el.scrollIntoView({ block: "start" });
   }, [query]);
   const shown = useMemo(() => {
-    if (!query) return all;
+    if (!query && !lesson) return all;
     const n = norm(query);
-    const hits = new Set(all.filter((r) => r.text && (norm(r.id).startsWith(n) || norm(r.title).includes(n) || norm(r.text).includes(n))).map((r) => r.id));
+    const hits = new Set(all.filter((r) => r.text && (!lesson || r.lesson === lesson) && (!query || norm(r.id).startsWith(n) || norm(r.title).includes(n) || norm(r.text).includes(n))).map((r) => r.id));
     // keep the parent headings of every hit so the result still reads in context
     const keep = new Set<string>();
     const byId = new Map(all.map((r) => [r.id, r]));
     for (const id of hits) { const p = id.split("."); for (let i = 1; i <= p.length; i++) keep.add(p.slice(0, i).join(".")); byId.get(id)?.parents.forEach((x) => keep.add(x)); }
     return all.filter((r) => keep.has(r.id));
-  }, [all, query]);
-  const hitCount = query ? shown.filter((r) => r.text).length : all.filter((r) => r.text).length;
+  }, [all, query, lesson]);
+  const hitCount = query || lesson ? shown.filter((r) => r.text).length : all.filter((r) => r.text).length;
 
   return <div className="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
     <nav aria-label="Sections" className="hidden lg:block"><div className="sticky top-24 max-h-[75vh] overflow-y-auto pr-2 text-sm">
@@ -67,6 +75,10 @@ export function ClauseGuide({ slug, rows, lessons }: { slug: string; rows: Claus
           </select>
         </div>
       </div>
+      {lesson && <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-300/30 bg-emerald-300/[.06] px-4 py-3 text-sm">
+        <span className="text-white/80">Showing the clauses taught in the lesson <span className="font-semibold text-white">“{lessonTitles[lesson] ?? lesson}”</span></span>
+        <span className="flex gap-3"><a href={`/learn/codes/${slug}/train#${lesson}`} className="text-emerald-100 hover:text-white">▶ Open the lesson</a><button type="button" onClick={clearLesson} className="text-white/60 hover:text-white">Show all clauses ✕</button></span>
+      </div>}
       {query && hitCount === 0 && <p className="mt-6 text-white/60">No clause mentions “{query}”. Try a shorter word or a clause number.</p>}
       <ol className="mt-4 space-y-2">
         {shown.map((r) => {
@@ -79,7 +91,7 @@ export function ClauseGuide({ slug, rows, lessons }: { slug: string; rows: Claus
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h3 className="min-w-0 font-semibold text-white"><span className="mr-2 font-mono text-sm text-amber-100/80">{r.id}</span>{mark(r.title, query)}</h3>
               <div className="flex gap-3 text-xs">
-                {r.lesson && <a href={`/learn/codes/${slug}/train#${r.lesson}`} className="text-blue-200 hover:text-white">Lesson →</a>}
+                {r.lesson && <a href={`/learn/codes/${slug}/train#${r.lesson}`} title={lessonTitles[r.lesson]} className="text-blue-200 hover:text-white">▶ Lesson{lessonTitles[r.lesson] ? `: ${lessonTitles[r.lesson].length > 32 ? lessonTitles[r.lesson].slice(0, 30) + "…" : lessonTitles[r.lesson]}` : ""}</a>}
                 <a href={`#${anchor(r.id)}`} onClick={() => setOpen(r.id)} className="text-white/40 hover:text-white" aria-label={`Link to clause ${r.id}`}>#</a>
               </div>
             </div>
