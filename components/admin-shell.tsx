@@ -112,7 +112,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   return (
     <AuthGate adminOnly requireComplete={false} label="Admin access requires authentication.">
-      <div className="min-h-screen bg-navy text-white lg:grid lg:grid-cols-[284px_1fr]">
+      <div className="min-h-screen bg-navy text-white lg:grid lg:grid-cols-[284px_minmax(0,1fr)]">
         <aside className="hidden border-r border-white/10 bg-black/20 px-5 py-6 lg:block">
           <Link href="/admin" className="block rounded-3xl border border-white/10 bg-white/5 p-4">
             <p className="text-xs uppercase tracking-[.28em] text-blue-200">NumSum Labs</p>
