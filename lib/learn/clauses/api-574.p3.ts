@@ -1,0 +1,28 @@
+// API 574 clause guide, part 3: Sections 5 and 6.
+import type { ClauseRow } from "./types";
+
+export const P3: ClauseRow[] = [
+  ["5", "Pipe-joining methods", ""],
+  ["5.1", "General", "Pipe is joined mainly by welding, threading and flanging, fabricated to ASME B31.3. Cast iron pipe and thin-wall tubing need their own joint types."],
+  ["5.2", "Threaded joints", "Generally limited to auxiliary piping NPS 2 and smaller in non-critical service (minor leak consequence). Threads up to NPS 24 are standardised in ASME B1.20.1. Couplings join lengths; unions or flanges are needed where the line must be broken. Threaded joints near rotating equipment or other vibration sources are especially prone to fatigue failure and need special consideration."],
+  ["5.3", "Welded joints", ""],
+  ["5.3.1", "General", "Welding has largely replaced threaded and flanged joints, except some small-bore piping and connections to equipment needing regular maintenance. Joints are butt welds (any size) or socket welds (usually NPS 2 and below)."],
+  ["5.3.2", "Butt-welded joints", "The most common joint: bevelled and aligned ends with a proper root opening per ASME B16.25 or the WPS, fusion welded."],
+  ["5.3.3", "Socket-welded joints", "The pipe is pushed into a socket and fillet welded, leaving the code-required small gap at the bottom of the socket for expansion and weld shrinkage. Socket-weld couplings join two lengths."],
+  ["5.3.4", "Welded branch connections", "Many piping failures happen at pipe-to-pipe branch welds because unsupported valves or piping, vibration and thermal expansion concentrate bending and torsional stresses there, causing fatigue. Where this is a risk, a forged tee is more reliable because it moves the weld away from the highest stress; properly full-penetration-welded weldolets also perform better."],
+  ["5.4", "Flanged joints", "Two flanges bolted with a gasket between. Facings range from serrated (concentric or spiral) to smooth, or grooved for ring-joint gaskets, depending on gasket and service. Joints should be assembled by trained and qualified people (ASME PCC-1 Appendix A) and a finished-joint check considered. Common flange types: weld neck, slip-on, threaded, blind, lap joint and socket weld."],
+  ["5.5", "Cast iron pipe joints", "Flanged, packed, sleeve, hub-and-spigot or bell-and-spigot, push-on with rubber rings, or clamped. Rarely used in process piping because cast iron has low toughness and can fracture brittly."],
+  ["5.6", "Tubing joints", "Welded, soldered, brazed, or flared and compression fittings, assembled by trained people, with a finished-joint check per the fitting maker's recommendations."],
+  ["5.7", "Special joints", "Proprietary joints with special gaskets, clamps and bolting can offer: (a) higher pressure and temperature ratings; (b) smaller size; (c) easier installation with looser alignment needs; (d) higher tolerance of forces and moments."],
+  ["5.8", "Nonmetallic piping joints", ""],
+  ["5.8.1", "General", "FRP joint designs depend on the manufacturer; common ones are bell and spigot, butt and wrap, taper-taper and flanged."],
+  ["5.8.2", "Bell and spigot / taper-taper", "The spigot is inserted into the bell with adhesive; success depends on surface preparation, full insertion and enough adhesive. Inspect inside where possible for excess adhesive restricting flow and the specified gap, and outside for preparation, insertion, assembly and alignment."],
+  ["5.8.3", "Butt and wrap", "Plain ends are butted and wrapped with resin and fibre layers by qualified secondary bonders. Inside, check gap, cut-edge protection and gap filler paste; outside, check alignment, gap, thickness, width, laminate sequence and taper. Fittings are often thicker than the pipe and must be tapered correctly."],
+  ["5.8.4", "Flange-flange", "Need correct gaskets and torque, applied with a calibrated torque wrench to avoid overstressing the FRP. Flanges must be aligned and flat within spec. Full-face flanges need full-face gaskets; FRP flanges bolted to raised-face flanges need individual evaluation of torque and gasket."],
+
+  ["6", "Reasons for inspection", ""],
+  ["6.1", "General", "Inspection observes, reports and quantifies damage (API 571) and specifies repair or replacement. Planning identifies likely mechanisms to direct the work; inspection data reveal causes and rates. An inspection history lets the owner predict repairs, slow deterioration and above all prevent loss of containment, improving safety, cost and reliability. API 570 sets the programme requirements."],
+  ["6.2", "Process and personnel safety", "A piping leak can range from a nuisance to a process safety incident depending on temperature, pressure, contents and location; plant piping often carries flammable, acidic, alkaline or toxic fluids with personnel and environmental risk. Flanged joints leak through corrosion, cracking, bolt load and gasket problems and thermal effects, especially in hot service and at start-up and shutdown, so plants need QA/QC to make sure joints are correctly gasketed, assembled, inspected and tested after maintenance (ASME PCC-1)."],
+  ["6.3", "Reliable operation", "Thorough inspection, analysis and good records are also needed for reliability. Repair and replacement are scheduled for planned turnarounds to avoid unplanned outages and lost production."],
+  ["6.4", "Regulatory requirements", "Regulations may cover piping affecting personnel, process safety or the environment. US OSHA 29 CFR 1910.119 (process safety management) requires equipment handling significant hazardous chemicals, including piping, to be inspected to accepted codes such as API 570; local and state rules may add requirements."],
+];
