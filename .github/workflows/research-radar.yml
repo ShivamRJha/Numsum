@@ -17,6 +17,7 @@ jobs:
     timeout-minutes: 20
     env:
       FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+      OPENALEX_API_KEY: ${{ secrets.OPENALEX_API_KEY }} # optional
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
