@@ -48,7 +48,7 @@ function Table({ rows, defs, q }: { rows: (Period & Ratios)[]; defs: RowDef[]; q
 function Bars({ rows, pick, q }: { rows: (Period & Ratios)[]; pick: Item; q: boolean }) {
   const vals = rows.map((r) => (r[pick] as number | null | undefined) ?? null);
   const max = Math.max(...vals.map((v) => Math.abs(v ?? 0)), 1);
-  return <div className="flex h-28 items-end gap-1.5">{rows.map((r, i) => { const v = vals[i]; return <div key={r.end} className="flex flex-1 flex-col items-center gap-1"><div className={cn("w-full rounded-t-md transition-all duration-700", (v ?? 0) < 0 ? "bg-red-300/70" : "bg-amber-100/70")} style={{ height: `${Math.max(2, (Math.abs(v ?? 0) / max) * 100)}%` }} title={`${label(r.end, q)}: ₹${cr(v)} Cr`} /><span className="text-[10px] text-white/40">{label(r.end, q)}</span></div>; })}</div>;
+  return <div className="flex h-28 items-end gap-1.5">{rows.map((r, i) => { const v = vals[i]; return <div key={r.end} className="flex h-full flex-1 flex-col items-center gap-1"><div className="flex w-full flex-1 items-end"><div className={cn("w-full rounded-t-md transition-all duration-700", (v ?? 0) < 0 ? "bg-red-300/70" : "bg-amber-100/70")} style={{ height: `${Math.max(2, (Math.abs(v ?? 0) / max) * 100)}%` }} title={`${label(r.end, q)}: ₹${cr(v)} Cr`} /></div><span className="text-[10px] text-white/40">{label(r.end, q)}</span></div>; })}</div>;
 }
 
 export function FinancialsPanel({ symbol }: { symbol: string }) {

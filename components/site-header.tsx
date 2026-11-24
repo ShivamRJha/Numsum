@@ -56,11 +56,11 @@ export function SiteHeader() {
                 {here && <span className="absolute inset-x-3 -bottom-[13px] h-0.5 rounded-full bg-amber-100" aria-hidden="true" />}
               </button>
               {isOpen && <div className="absolute left-0 top-full z-50 pt-3" onMouseEnter={() => enter(g.label)}>
-                <div className="grid w-[40rem] grid-cols-[1fr_13rem] overflow-hidden rounded-3xl border border-white/10 bg-[#070c16]/95 shadow-[0_30px_80px_rgba(0,0,0,.55)] backdrop-blur-2xl animate-menu-in">
+                <div className="grid w-[40rem] grid-cols-[1fr_13rem] overflow-hidden rounded-3xl border border-white/10 bg-[#070c16] shadow-[0_30px_80px_rgba(0,0,0,.55)] animate-menu-in">
                   <div className="grid grid-cols-2 gap-0.5 p-2">{g.links.map((l) => <Link key={l.href} href={l.href} onClick={() => setMenu(null)} className={cn("rounded-2xl px-3.5 py-2.5 transition hover:bg-white/[0.07]", isActive(pathname, l.href) && "bg-white/[0.06]")}><span className="block text-sm font-medium text-white">{l.label}</span>{l.desc && <span className="mt-0.5 block text-xs leading-snug text-white/50">{l.desc}</span>}</Link>)}</div>
                   <div className="flex flex-col justify-between border-l border-white/10 bg-white/[0.025] p-4">
                     <div><p className="font-display text-base font-semibold text-white">{g.label}</p><p className="mt-1.5 text-xs leading-relaxed text-white/55">{g.blurb}</p></div>
-                    {g.cta && <Link href={g.cta.href} onClick={() => setMenu(null)} className="group/cta mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-amber-100 hover:text-white">{g.cta.label}<ArrowRight size={14} className="transition group-hover/cta:translate-x-0.5" /></Link>}
+                    <div className="mt-4 grid gap-3">{g.cta && <Link href={g.cta.href} onClick={() => setMenu(null)} className="group/cta inline-flex items-center gap-1.5 text-sm font-semibold text-amber-100 hover:text-white">{g.cta.label}<ArrowRight size={14} className="transition group-hover/cta:translate-x-0.5" /></Link>}<p className="flex gap-3 border-t border-white/10 pt-3 text-xs text-white/50">{siteMenuLinks.map((l) => <Link key={l.href} href={l.href} onClick={() => setMenu(null)} className="hover:text-white">{l.label}</Link>)}</p></div>
                   </div>
                 </div>
               </div>}

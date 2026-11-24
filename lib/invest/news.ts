@@ -17,7 +17,7 @@ const POS: [string, number][] = [
   ["dividend", 0.3], ["bonus issue", 0.4], ["buyback", 0.6], ["stake buy", 0.4], ["acquires", 0.3], ["acquisition", 0.2], ["expansion", 0.4], ["capacity addition", 0.4], ["launches", 0.2],
   ["approval", 0.4], ["usfda approval", 0.7], ["gets approval", 0.5], ["debt-free", 0.6], ["deleverag", 0.5], ["rating upgrade", 0.8], ["credit rating upgraded", 0.8],
   ["surg", 0.6], ["soar", 0.6], ["rall", 0.5], ["jump", 0.5], ["gain", 0.3], ["hits 52-week high", 0.4], ["all-time high", 0.4], ["record high", 0.4], ["rise", 0.25], ["climb", 0.3],
-  ["guidance raised", 0.8], ["raises guidance", 0.8], ["turnaround", 0.5], ["turns profitable", 0.8], ["promoter buys", 0.6], ["promoters increase stake", 0.6],
+  ["crash proof", 1.1], ["crash-proof", 1.1], ["guidance raised", 0.8], ["raises guidance", 0.8], ["turnaround", 0.5], ["turns profitable", 0.8], ["promoter buys", 0.6], ["promoters increase stake", 0.6],
 ];
 const NEG: [string, number][] = [
   ["loss widens", 1], ["net loss", 0.7], ["profit falls", 0.8], ["profit drops", 0.8], ["profit declines", 0.7], ["profit down", 0.6], ["misses estimates", 0.9], ["miss estimates", 0.9], ["below estimates", 0.8],
