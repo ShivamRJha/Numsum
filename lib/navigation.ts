@@ -7,6 +7,7 @@ export type MenuGroup = { label: string; links: MenuLink[] };
 export const siteMenu: MenuGroup[] = [
   { label: "Engineering", links: [
     { label: "All engineering tools", href: "/engineering", desc: "Free calculators for inspection and plant engineers" },
+    { label: "Inspection plan generator", href: "/engineering/inspection-plan-generator", desc: "Standard questions → API 510/570 plan as PDF" },
     { label: "Pressure vessel thickness", href: "/engineering/pressure-vessel-thickness-calculator", desc: "Shell and heads, MAWP — ASME VIII-1" },
     { label: "Pipe wall thickness", href: "/engineering/pipe-thickness-calculator", desc: "Required wall and schedule — ASME B31.3" },
     { label: "Remaining life", href: "/engineering/remaining-life-calculator", desc: "Corrosion rate and next inspection — API 510/570/653" },
@@ -22,6 +23,7 @@ export const siteMenu: MenuGroup[] = [
   ] },
   { label: "Learn", links: [
     { label: "Codes academy", href: "/learn/codes", desc: "API 510–581, ASME Section II & V study modules" },
+    { label: "API 510 / 570 exam prep", href: "/learn/exam-prep", desc: "Study plan, calculation drills, mock exams" },
     { label: "All guides & search", href: "/learn", desc: "Search everything; short, plain-language guides" },
     { label: "Damage mechanisms library", href: "/learn/damage-mechanisms", desc: "All 69 API 571 mechanisms explained" },
     { label: "Investing terms", href: "/learn/investing", desc: "CAGR, XIRR, Sharpe, P/E and more" },

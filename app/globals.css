@@ -267,3 +267,20 @@ html.light .text-sky-200{color:rgb(3,105,161)}
 html.light .text-sky-200\/90{color:rgb(3,105,161)}
 html.light .text-violet-100{color:rgb(109,40,217)}
 html.light .text-violet-200{color:rgb(109,40,217)}
+@media print{@page{size:A4;margin:12mm}}
+
+/* light-mode overrides for learning + engineering pages */
+html.light .bg-amber-200\/\[0\.05\]{background-color:rgba(180,83,9,.08)}
+html.light .bg-red-300{background-color:rgba(185,28,28,.08)}
+html.light .bg-sky-300\/10{background-color:rgba(3,105,161,.08)}
+html.light .bg-sky-300\/70{background-color:rgba(3,105,161,.08)}
+html.light .bg-sky-300\/\[0\.05\]{background-color:rgba(3,105,161,.08)}
+html.light .border-amber-200\/40{border-color:rgba(180,83,9,.35)}
+html.light .border-sky-200\/25{border-color:rgba(3,105,161,.35)}
+html.light .border-sky-300\/70{border-color:rgba(3,105,161,.35)}
+html.light .text-amber-700{color:rgb(180,83,9)}
+html.light .text-amber-900{color:rgb(180,83,9)}
+html.light .text-emerald-900{color:rgb(4,120,87)}
+html.light .text-orange-900{color:rgb(194,65,12)}
+html.light .text-red-700{color:rgb(185,28,28)}
+html.light .text-red-900{color:rgb(185,28,28)}
