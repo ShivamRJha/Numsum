@@ -37,7 +37,7 @@ export default async function ClausesPage({ params }: { params: Promise<{ slug: 
         <span className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-emerald-100">100% of clauses covered</span>
         <Link href={`/learn/codes/${slug}/train`} className="rounded-full border border-white/15 px-3 py-1 text-white/80 hover:border-white/40">▶ Training mode</Link>
         <Link href={`/learn/codes/${slug}`} className="rounded-full border border-white/15 px-3 py-1 text-white/80 hover:border-white/40">Module overview</Link>
-        {slug.startsWith("api-510") && <Link href="/learn/exam-prep/api-510" className="rounded-full border border-white/15 px-3 py-1 text-white/80 hover:border-white/40">API 510 exam prep</Link>}
+        {/^api-5(10|70)/.test(slug) && <Link href={`/learn/exam-prep/${slug.slice(0, 7)}`} className="rounded-full border border-white/15 px-3 py-1 text-white/80 hover:border-white/40">{c.short} exam prep</Link>}
       </div>
     </header>
     <div className="mt-8"><ClauseGuide slug={slug} rows={s.rows} lessons={lessons} /></div>
