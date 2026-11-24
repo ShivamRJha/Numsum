@@ -20,7 +20,7 @@ export function ClauseGuide({ slug, rows, lessons }: { slug: string; rows: Claus
 
   useEffect(() => {
     const h = decodeURIComponent(location.hash.slice(1));
-    if (h.startsWith("c-")) { setOpen(h.slice(2)); requestAnimationFrame(() => document.getElementById(h)?.scrollIntoView({ block: "start" })); }
+    if (h.startsWith("c-")) { setOpen(h.slice(2)); const go = () => document.getElementById(h)?.scrollIntoView({ block: "start" }); requestAnimationFrame(go); const t1 = setTimeout(go, 350); const t2 = setTimeout(go, 1000); return () => { clearTimeout(t1); clearTimeout(t2); }; }
   }, []);
 
   const query = q.trim();

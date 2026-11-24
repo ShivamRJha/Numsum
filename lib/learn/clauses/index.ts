@@ -1,6 +1,7 @@
 import type { ClauseRow } from "./types";
 import { API510_CLAUSES } from "./api-510";
 import { API570_CLAUSES } from "./api-570";
+import { API574_CLAUSES } from "./api-574";
 
 export type { ClauseRow };
 export type ClauseSet = {
@@ -44,6 +45,14 @@ export const CLAUSE_SETS: ClauseSet[] = [
       ["7.1", "evaluation"], ["7.2", "evaluation"], ["7.3", "evaluation"], ["7.4", "evaluation"],
       ["7.5", "stress-records"], ["7.6", "stress-records"], ["7.7", "stress-records"], ["7.8", "stress-records"], ["7.9", "stress-records"], ["7.10", "stress-records"],
       ["8", "repairs"], ["C", "repairs"], ["9", "buried"],
+    ]),
+  },
+  {
+    slug: "api-574-piping-inspection-practices",
+    rows: API574_CLAUSES,
+    lesson: byPrefix([
+      ["4", "components"], ["5", "joints"], ["6", "why"], ["7", "plans"], ["8", "frequency"], ["9", "safety"],
+      ["10", "procedures"], ["11", "tests"], ["12", "retirement"], ["13", "records"], ["A", "procedures"],
     ]),
   },
 ];

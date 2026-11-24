@@ -1,0 +1,12 @@
+import { P1 } from "./api-574.p1";
+import { P2 } from "./api-574.p2";
+import { P3 } from "./api-574.p3";
+import { P4 } from "./api-574.p4";
+import { P5 } from "./api-574.p5";
+import { P6 } from "./api-574.p6";
+import { P7 } from "./api-574.p7";
+import { P8 } from "./api-574.p8";
+import { P9 } from "./api-574.p9";
+import { P10 } from "./api-574.p10";
+import { P11 } from "./api-574.p11";
+export const API574_CLAUSES = [...P1, ...P2, ...P3, ...P4, ...P5, ...P6, ...P7, ...P8, ...P9, ...P10, ...P11];
