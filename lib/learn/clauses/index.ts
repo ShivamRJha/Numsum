@@ -2,6 +2,7 @@ import type { ClauseRow } from "./types";
 import { API510_CLAUSES } from "./api-510";
 import { API570_CLAUSES } from "./api-570";
 import { API574_CLAUSES } from "./api-574";
+import { API580_CLAUSES } from "./api-580";
 
 export type { ClauseRow };
 export type ClauseSet = {
@@ -53,6 +54,16 @@ export const CLAUSE_SETS: ClauseSet[] = [
     lesson: byPrefix([
       ["4", "components"], ["5", "joints"], ["6", "why"], ["7", "plans"], ["8", "frequency"], ["9", "safety"],
       ["10", "procedures"], ["11", "tests"], ["12", "retirement"], ["13", "records"], ["A", "procedures"],
+    ]),
+  },
+  {
+    slug: "api-580-risk-based-inspection",
+    rows: API580_CLAUSES,
+    lesson: byPrefix([
+      ["1", "what-is-risk"], ["2", "what-is-risk"], ["3", "what-is-risk"], ["4", "what-is-risk"],
+      ["5.1", "program-elements"], ["5.2", "program-elements"], ["5.3", "types"], ["5.4", "types"], ["5", "program-elements"],
+      ["6", "planning"], ["7", "data"], ["8", "damage"], ["9", "pof"], ["10", "cof"], ["11", "risk"],
+      ["12", "inspection-strategy"], ["13", "mitigation"], ["14", "reassessment"], ["15", "reassessment"], ["16", "reassessment"], ["17", "reassessment"],
     ]),
   },
 ];
