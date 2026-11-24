@@ -10,5 +10,6 @@ import { P7 } from "./api-579.p7";
 import { P8 } from "./api-579.p8";
 import { P9 } from "./api-579.p9";
 import { P10 } from "./api-579.p10";
+import { P11 } from "./api-579.p11";
 
-export const API579_CLAUSES: ClauseRow[] = [...P1, ...P2, ...P3, ...P4, ...P5, ...P6, ...P7, ...P8, ...P9, ...P10];
+export const API579_CLAUSES: ClauseRow[] = [...P1, ...P2, ...P3, ...P4, ...P5, ...P6, ...P7, ...P8, ...P9, ...P10, ...P11];
