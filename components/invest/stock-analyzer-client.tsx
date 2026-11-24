@@ -12,10 +12,11 @@ import { inr } from "@/lib/invest/planner";
 import type { Check, Fundamentals, StockStats, Verdict } from "@/lib/invest/stocks";
 import { Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FinancialsPanel, NewsPanel, PeersPanel, useNews, type Peer } from "@/components/invest/stock-deep";
 
 type Analysis = {
   symbol: string; name: string; industry: string; inNifty500: boolean;
-  stats: StockStats; fundamentals: Fundamentals | null; checks: Check[]; verdict: Verdict;
+  stats: StockStats; fundamentals: Fundamentals | null; checks: Check[]; verdict: Verdict; peers?: Peer[];
   indexPe: number | null; industryPe: number | null; screen: { score: number | null; signal: string; rankOf?: number } | null;
   chart: [number, number, number | null, number | null][]; weekly: [number, number][]; indexWeekly: [number, number][]; sources: string[];
   dataCheck?: { prices: string; priceCheck: string; fundamentals: string };
@@ -89,6 +90,7 @@ export function StockAnalyzerClient({ symbol, universe }: { symbol: string; univ
   const [error, setError] = useState("");
   const [sip, setSip] = useState(10000);
   const [years, setYears] = useState(5);
+  const news = useNews(symbol, symbol);
 
   useEffect(() => {
     let live = true;
@@ -111,12 +113,14 @@ export function StockAnalyzerClient({ symbol, universe }: { symbol: string; univ
       <div className="flex gap-2"><Link href={`/tools/portfolio?s=${encodeURIComponent(data.symbol)}`} className="glass rounded-full px-4 py-2 text-sm text-white">Add to portfolio check</Link></div>
     </ToolHeader>
 
-    <div className="grid gap-6 lg:grid-cols-[1.3fr_.7fr]">
+    <nav aria-label="Sections" className="no-scrollbar sticky top-[6.25rem] z-30 -mx-1 mb-5 flex gap-1 overflow-x-auto rounded-full border border-white/10 bg-[#02050a]/85 p-1 text-sm backdrop-blur-xl">{[["#overview", "Overview"], ["#checklist", "Checklist"], ["#financials", "Financials"], ["#peers", "Peers"], ["#news", "News"], ["#numbers", "All numbers"]].filter(([h]) => h !== "#peers" || (data.peers?.length ?? 0) > 1).map(([h, l]) => <a key={h} href={h} className="shrink-0 rounded-full px-4 py-1.5 text-white/65 transition hover:bg-white/10 hover:text-white">{l}</a>)}</nav>
+    <div id="overview" className="scroll-mt-32 grid gap-6 lg:grid-cols-[1.3fr_.7fr]">
       <Card className="premium-card"><PriceChart data={data.chart} /></Card>
       <Card className={cn("premium-card border", v.label === "Strong" ? "border-emerald-300/40" : v.label === "Positive" ? "border-lime-300/30" : v.label === "Mixed" ? "border-amber-200/30" : "border-red-300/30")}>
         <p className="text-xs uppercase tracking-[.16em] text-white/50"><Term id="signal">Long-term checklist signal</Term></p>
         <div className="mt-2 flex items-center gap-3"><span className="font-display text-5xl text-white">{v.score}</span><Badge kind={v.label}>{v.label}</Badge></div>
         <p className="mt-3 text-sm leading-6 text-white/75">{v.summary}</p>
+        {news.data && news.data.label !== "Not enough news" && <p className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-sm text-white/70">With news tone (<a href="#news" className="underline decoration-white/30 hover:text-white">{news.data.label.toLowerCase()}</a>): <strong className="text-white">{Math.max(0, Math.min(100, v.score + news.data.points))}</strong> <span className="text-white/45">({news.data.points >= 0 ? "+" : ""}{news.data.points})</span></p>}
         <div className="mt-4 grid gap-2">{Object.entries(v.groups).map(([g, x]) => <div key={g} className="flex items-center justify-between text-sm"><span className="text-white/60">{g}</span><span className="flex items-center gap-2"><span className="h-1.5 w-24 overflow-hidden rounded-full bg-white/10"><span className="block h-full rounded-full bg-amber-200" style={{ width: `${(x.pass / x.total) * 100}%` }} /></span><span className="w-10 text-right text-white/75">{x.pass}/{x.total}</span></span></div>)}</div>
         <div className={cn("mt-4 rounded-2xl border p-3", v.heat.label === "Overheated" ? "border-red-300/40 bg-red-500/10" : v.heat.label === "Hot" ? "border-orange-300/40 bg-orange-400/10" : "border-white/10 bg-white/[0.03]")}>
           <div className="flex items-center justify-between gap-2"><span className="flex items-center gap-2 text-sm text-white"><Flame size={16} className={v.heat.label === "Calm" ? "text-emerald-300" : v.heat.label === "Warm" ? "text-amber-200" : "text-red-300"} aria-hidden="true" /><Term id="heat">Risen too much?</Term></span><span className="flex items-center gap-2"><span className="font-mono text-sm text-white/70">{v.heat.score}/100</span><Badge kind={v.heat.label}>{v.heat.label}</Badge></span></div>
@@ -128,13 +132,17 @@ export function StockAnalyzerClient({ symbol, universe }: { symbol: string; univ
       </Card>
     </div>
 
-    <Card className="premium-card mt-6">
+    <Card id="checklist" className="premium-card mt-6 scroll-mt-32">
       <h2 className="font-display text-2xl">Long-term investor checklist</h2>
       <Explain>These are the questions careful investors ask before starting a SIP in a stock: Is it a good business? Is the price fair? How bumpy is the ride? Is the long-term trend up? Has it already run up too much? Can I buy and sell it easily? Green = passes, red = fails, grey = data not available. Tap any underlined term for an explanation.</Explain>
       <div className="mt-4 grid gap-5 lg:grid-cols-2">{groups.map(([g, list]) => <div key={g}><p className="mb-2 text-xs font-semibold uppercase tracking-[.18em] text-amber-100/80">{g}</p><ul className="grid gap-2">{list.map((c) => <li key={c.label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3"><div className="flex items-start gap-3">{c.pass === true ? <CheckCircle2 className="mt-0.5 shrink-0 text-emerald-300" size={18} aria-label="Pass" /> : c.pass === false ? <XCircle className="mt-0.5 shrink-0 text-red-300" size={18} aria-label="Fail" /> : <CircleHelp className="mt-0.5 shrink-0 text-white/35" size={18} aria-label="Not available" />}<div className="min-w-0 flex-1"><div className="flex flex-wrap justify-between gap-2 text-sm"><span className="text-white">{c.term ? <Term id={c.term}>{c.label}</Term> : c.label}</span><span className="font-mono tabular-nums text-white/70">{c.value}</span></div><p className="mt-1 text-xs text-white/45">{c.note}</p></div></div></li>)}</ul></div>)}</div>
     </Card>
 
-    <details className="group mt-6 rounded-3xl border border-white/10 p-4 md:p-5">
+    <div id="financials" className="mt-6 scroll-mt-32"><FinancialsPanel symbol={data.symbol} /></div>
+    {data.peers && data.peers.length > 1 && <div id="peers" className="mt-6 scroll-mt-32"><PeersPanel symbol={data.symbol} peers={data.peers} industry={data.industry} /></div>}
+    <div id="news" className="mt-6 scroll-mt-32"><NewsPanel news={news} /></div>
+
+    <details id="numbers" className="group mt-6 scroll-mt-32 rounded-3xl border border-white/10 p-4 md:p-5">
     <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-display text-xl text-white">All the numbers <span className="font-sans text-sm text-white/45">returns, risk, valuation, drawdowns, SIP back-test <span className="group-open:hidden">▾</span><span className="hidden group-open:inline">▴</span></span></summary>
     <div className="mt-6 grid gap-6 lg:grid-cols-2">
       <Card className="premium-card"><h2 className="font-display text-2xl">Returns</h2><Explain>How much the share price changed. Returns over 3 and 5 years are shown per year (<Term id="cagr">CAGR</Term>). Dividends are not included.</Explain><div className="mt-4 grid grid-cols-3 gap-3">{([["1 month", s.r1m], ["3 months", s.r3m], ["6 months", s.r6m], ["1 year", s.r1y], ["3y per year", s.cagr3], ["5y per year", s.cagr5]] as const).map(([l, x]) => <Stat key={l} label={l} value={<span className={tone(x)}>{signed(x)}</span>} />)}</div>
