@@ -16,11 +16,11 @@ export function Trainer({ m, next }: { m: CodeModule; next?: { slug: string; sho
   useEffect(() => { const k = m.chapters.findIndex((c) => c.id === p.last); if (k >= 0) setI(k); }, [m.chapters, p.last]);
   const ch = m.chapters[i]; const done = new Set(p.done); const pct = Math.round((done.size / m.chapters.length) * 100);
   const go = (k: number) => { const n = Math.max(0, Math.min(m.chapters.length - 1, k)); setI(n); update((x) => ({ ...x, last: m.chapters[n].id })); window.scrollTo({ top: 0, behavior: "smooth" }); };
-  const complete = () => { update((x) => ({ ...x, done: [...new Set([...x.done, ch.id])], last: ch.id })); if (i < m.chapters.length - 1) go(i + 1); else setTab("quiz"); };
+  const complete = () => { update((x) => ({ ...x, done: [...new Set([...x.done, ch.id])], last: ch.id })); if (i < m.chapters.length - 1) go(i + 1); else { setTab("quiz"); document.getElementById("trainer-top")?.scrollIntoView({ behavior: "smooth" }); } };
   useEffect(() => { if (tab !== "lessons") return; const h = (e: KeyboardEvent) => { if ((e.target as HTMLElement)?.closest("input,select,textarea")) return; if (e.key === "ArrowRight") go(i + 1); if (e.key === "ArrowLeft") go(i - 1); }; window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h); });
-  const tabBtn = (t: Tab, label: string) => <button type="button" onClick={() => setTab(t)} aria-pressed={tab === t} className={cn("rounded-full px-4 py-2 text-sm", tab === t ? "bg-amber-100 font-semibold text-black" : "border border-white/15 text-white/70 hover:text-white")}>{label}</button>;
+  const tabBtn = (t: Tab, label: string) => <button type="button" onClick={() => { setTab(t); document.getElementById("trainer-top")?.scrollIntoView({ behavior: "smooth", block: "start" }); }} aria-pressed={tab === t} className={cn("rounded-full px-4 py-2 text-sm", tab === t ? "bg-amber-100 font-semibold text-black" : "border border-white/15 text-white/70 hover:text-white")}>{label}</button>;
 
-  return <div>
+  return <div id="trainer-top" className="scroll-mt-24">
     <div className="sticky top-[4.5rem] z-20 -mx-2 rounded-2xl border border-white/10 bg-[#070c16]/95 px-4 py-3 backdrop-blur">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">{tabBtn("lessons", `Lessons ${done.size}/${m.chapters.length}`)}{tabBtn("cards", "Flashcards")}{tabBtn("quiz", `Quiz${p.best !== undefined ? ` · best ${p.best}%` : ""}`)}</div>
