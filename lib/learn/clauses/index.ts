@@ -3,6 +3,7 @@ import { API510_CLAUSES } from "./api-510";
 import { API570_CLAUSES } from "./api-570";
 import { API574_CLAUSES } from "./api-574";
 import { API580_CLAUSES } from "./api-580";
+import { API571_CLAUSES } from "./api-571";
 
 export type { ClauseRow };
 export type ClauseSet = {
@@ -65,6 +66,19 @@ export const CLAUSE_SETS: ClauseSet[] = [
       ["6", "planning"], ["7", "data"], ["8", "damage"], ["9", "pof"], ["10", "cof"], ["11", "risk"],
       ["12", "inspection-strategy"], ["13", "mitigation"], ["14", "reassessment"], ["15", "reassessment"], ["16", "reassessment"], ["17", "reassessment"],
     ]),
+  },
+  {
+    slug: "api-571-damage-mechanisms",
+    rows: API571_CLAUSES,
+    // every mechanism has the same sub-clauses, so map by the last digit
+    lesson: (id) => {
+      if (id === "1" || id === "2" || id.startsWith("2.")) return "how-organised";
+      if (id === "4" || id === "A" || id.startsWith("A.")) return "dmr";
+      const m = /^3\.\d+\.(\d)$/.exec(id);
+      if (m) return ({ "3": "critical-factors", "5": "appearance", "6": "mitigation", "7": "appearance" } as Record<string, string>)[m[1]] ?? "groups";
+      if (id === "3" || /^3\.\d+$/.test(id)) return "groups";
+      return undefined;
+    },
   },
 ];
 
