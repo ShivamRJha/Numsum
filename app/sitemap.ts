@@ -14,6 +14,7 @@ const routes: [string, number, F][] = [
   ["/products/iris", 0.9, "monthly"],
   ["/learn", 0.85, "weekly"],
   ["/learn/codes", 0.9, "monthly"],
+  ["/learn/exam-prep", 0.85, "monthly"], ["/learn/exam-prep/api-510", 0.8, "monthly"], ["/learn/exam-prep/api-570", 0.8, "monthly"],
   ...CODES.map((c): [string, number, F] => [`/learn/codes/${c.slug}`, 0.85, "monthly"]),
   ...TOPICS.map((t): [string, number, F] => [`/learn/codes/topics/${t.slug}`, 0.6, "monthly"]),
   ["/learn/damage-mechanisms", 0.85, "monthly"],

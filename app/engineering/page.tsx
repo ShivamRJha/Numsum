@@ -12,7 +12,7 @@ export const metadata: Metadata = { title, description, alternates: { canonical:
 
 const GROUPS: [string, string[]][] = [
   ["Design & thickness", ["pressure-vessel-thickness-calculator", "pipe-thickness-calculator", "hydrotest-pressure-calculator"]],
-  ["Inspection & integrity", ["remaining-life-calculator", "damage-mechanism-screening"]],
+  ["Inspection & integrity", ["inspection-plan-generator", "remaining-life-calculator", "damage-mechanism-screening"]],
   ["Materials & quality", ["material-spec-finder", "qap-builder"]],
   ["Energy & utilities", ["steam-trap-loss-calculator"]],
 ];

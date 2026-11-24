@@ -9,6 +9,7 @@ const MAP = {
   "steam-trap-loss-calculator": dynamic(() => import("./steam-calc").then((m) => m.SteamCalc), { loading: Skeleton }),
   "damage-mechanism-screening": dynamic(() => import("./dm-screen").then((m) => m.DmScreen), { loading: Skeleton }),
   "material-spec-finder": dynamic(() => import("./spec-finder").then((m) => m.SpecFinder), { loading: Skeleton }),
+  "inspection-plan-generator": dynamic(() => import("./inspection-plan").then((m) => m.InspectionPlan), { loading: Skeleton }),
   "qap-builder": dynamic(() => import("./qap-builder").then((m) => m.QapBuilder), { loading: Skeleton }),
 } as const;
 export function ToolClient({ slug }: { slug: string }) {
