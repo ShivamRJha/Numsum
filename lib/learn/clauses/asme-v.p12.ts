@@ -78,6 +78,7 @@ export const P12: ClauseRow[] = [
   ["II-1030", "Equipment", ""],
   ["II-1031", "Bubble solution", "(a) A film that stays put with bubbles that don't burst quickly, with few inherent bubbles; (b) no cleaning soaps or detergents; (c) suited to the test temperature."],
   ["II-1032", "Vacuum box", "Convenient size (e.g., 150 × 750 mm, 6 × 30 in.) with a window opposite the open, gasketed bottom, plus connections, valves, lighting and a gauge of 0–100 kPa (0–15 psi, or 0–750 mm Hg); the T-1031(a) range rule doesn't apply."],
+  ["II-1033", "Vacuum source", "Any convenient method (air ejector, vacuum pump, motor intake manifold); the gauge must show a partial vacuum of at least 15 kPa (2 psi, 4 in. Hg) below atmospheric, or as the Code requires."],
   ["II-1070", "Test", ""],
   ["II-1071", "Surface temperature", "Normally 5–50°C (40–125°F); other temperatures if the procedure is demonstrated."],
   ["II-1072", "Application of solution", "Flow, spray or brush on before placing the box."],
