@@ -10,7 +10,7 @@ export const siteMenu: MenuGroup[] = [
     { label: "Clause library", href: "/learn/codes#clauses", desc: "Every clause explained, linked to its lesson" },
     { label: "API 510 / 570 exam prep", href: "/learn/exam-prep", desc: "Study plan, calculation drills, mock exams" },
     { label: "Damage mechanisms", href: "/learn/damage-mechanisms", desc: "All API 571 mechanisms explained" },
-    { label: "Guides", href: "/learn", desc: "Short guides on inspection topics" },
+    { label: "Short guides", href: "/learn#guides", desc: "Five-minute reads on inspection topics" },
   ] },
   { label: "Engineering", home: "/engineering", blurb: "Free calculators and planners for inspection and plant engineers.", base: ["/engineering"], cta: { label: "All engineering tools", href: "/engineering" }, links: [
     { label: "Inspection plan generator", href: "/engineering/inspection-plan-generator", desc: "API 510/570 plan as PDF" },

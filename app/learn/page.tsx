@@ -46,7 +46,7 @@ export default function LearnHub() {
       </table></div>
     </section>
 
-    <section className="mt-14"><h2 className="font-display text-2xl font-semibold text-white">Short inspection guides</h2><p className="mt-1 text-white/60">Five-minute reads for when you need the idea, not the whole code.</p><div className="mt-4 grid gap-3 md:grid-cols-2">{inspection.map((g) => <Link key={g.slug} href={`/learn/${g.slug}`} className="premium-card rounded-2xl border p-5 hover:border-amber-100/40"><p className="font-semibold text-white">{g.title.split(" — ")[0].split(":")[0]}</p><p className="mt-2 text-sm text-white/60">{g.description}</p><p className="mt-3 font-mono text-xs text-white/40">{g.minutes} min read</p></Link>)}</div></section>
+    <section id="guides" className="mt-14 scroll-mt-24"><h2 className="font-display text-2xl font-semibold text-white">Short inspection guides</h2><p className="mt-1 text-white/60">Five-minute reads for when you need the idea, not the whole code.</p><div className="mt-4 grid gap-3 md:grid-cols-2">{inspection.map((g) => <Link key={g.slug} href={`/learn/${g.slug}`} className="premium-card rounded-2xl border p-5 hover:border-amber-100/40"><p className="font-semibold text-white">{g.title.split(" — ")[0].split(":")[0]}</p><p className="mt-2 text-sm text-white/60">{g.description}</p><p className="mt-3 font-mono text-xs text-white/40">{g.minutes} min read</p></Link>)}</div></section>
 
     <section aria-labelledby="money" className="mt-16 rounded-3xl border border-dashed border-violet-200/30 bg-violet-300/[0.04] p-6 md:p-8">
       <p className="text-xs font-semibold uppercase tracking-[.18em] text-violet-200/80">Off the clock · just for fun</p>
