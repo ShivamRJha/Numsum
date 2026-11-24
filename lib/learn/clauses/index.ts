@@ -4,6 +4,7 @@ import { API570_CLAUSES } from "./api-570";
 import { API574_CLAUSES } from "./api-574";
 import { API580_CLAUSES } from "./api-580";
 import { API571_CLAUSES } from "./api-571";
+import { ASMEV_CLAUSES } from "./asme-v";
 
 export type { ClauseRow };
 export type ClauseSet = {
@@ -11,6 +12,8 @@ export type ClauseSet = {
   rows: ClauseRow[];
   /** clause number → training lesson id in the module, when one exists */
   lesson: (id: string) => string | undefined;
+  /** set while a guide is still being written: what is covered so far */
+  partial?: string;
 };
 
 /** first matching prefix wins; keys are clause-number prefixes */
@@ -78,6 +81,18 @@ export const CLAUSE_SETS: ClauseSet[] = [
       if (m) return ({ "3": "critical-factors", "5": "appearance", "6": "mitigation", "7": "appearance" } as Record<string, string>)[m[1]] ?? "groups";
       if (id === "3" || /^3\.\d+$/.test(id)) return "groups";
       return undefined;
+    },
+  },
+  {
+    slug: "asme-section-v-nde",
+    rows: ASMEV_CLAUSES,
+    partial: "Subsection A, Articles 1 and 2 (general requirements and radiography with all appendices). Articles 4 to 19 are being added.",
+    lesson: (id) => {
+      const m = /^(?:T|[IVX]+(?:-[A-Z])?|[A-Z])-(\d{3,4})/.exec(id);
+      if (!m) return undefined;
+      const n = m[1], art = n.length === 4 ? n.slice(0, 2) : n[0];
+      if (art === "1") return id.startsWith("II-") || id.startsWith("T-12") ? "personnel-procedures" : id.startsWith("A-") ? "choose" : "how-it-works";
+      return ({ "2": "rt", "4": "ut-welds", "5": "ut-materials", "6": "pt", "7": "mt", "8": "et", "9": "vt", "10": "lt" } as Record<string, string>)[art] ?? "ae-advanced";
     },
   },
 ];
