@@ -1,0 +1,35 @@
+name: Research radar alerts
+
+# Daily alerts for Research Commons members: standout new papers in each member's keywords.
+# Uses the same FIREBASE_SERVICE_ACCOUNT_JSON secret and FIREBASE_PROJECT_ID variable as "Deploy Firestore".
+on:
+  schedule:
+    - cron: "40 0 * * *" # 06:10 IST, so alerts are waiting in the morning
+  workflow_dispatch:
+
+concurrency:
+  group: research-radar
+  cancel-in-progress: false
+
+jobs:
+  alerts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          project_id: ${{ vars.FIREBASE_PROJECT_ID }}
+          create_credentials_file: true
+          export_environment_variables: true
+      - name: Find standout papers and write alerts
+        run: npx tsx scripts/research-radar.ts
