@@ -15,5 +15,7 @@ import { P12 } from "./asme-v.p12";
 import { P13 } from "./asme-v.p13";
 import { P14 } from "./asme-v.p14";
 import { P15 } from "./asme-v.p15";
+import { P16 } from "./asme-v.p16";
+import { P17 } from "./asme-v.p17";
 
-export const ASMEV_CLAUSES: ClauseRow[] = [...P1, ...P2, ...P3, ...P4, ...P5, ...P6, ...P7, ...P8, ...P9, ...P10, ...P11, ...P12, ...P13, ...P14, ...P15];
+export const ASMEV_CLAUSES: ClauseRow[] = [...P1, ...P2, ...P3, ...P4, ...P5, ...P6, ...P7, ...P8, ...P9, ...P10, ...P11, ...P12, ...P13, ...P14, ...P15, ...P16, ...P17];
