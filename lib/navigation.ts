@@ -1,47 +1,52 @@
 export const homeLink = ["Home", "/"] as const;
 
 export type MenuLink = { label: string; href: string; desc?: string };
-export type MenuGroup = { label: string; links: MenuLink[] };
+export type MenuGroup = { label: string; home: string; blurb: string; base: string[]; links: MenuLink[]; cta?: MenuLink };
 
-/** Main site menu (header dropdowns and mobile accordion). */
+/** Main site menu: header mega-menus, the section bar under the header, and the mobile drawer. */
 export const siteMenu: MenuGroup[] = [
-  { label: "Engineering", links: [
-    { label: "All engineering tools", href: "/engineering", desc: "Free calculators for inspection and plant engineers" },
-    { label: "Inspection plan generator", href: "/engineering/inspection-plan-generator", desc: "Standard questions → API 510/570 plan as PDF" },
-    { label: "Pressure vessel thickness", href: "/engineering/pressure-vessel-thickness-calculator", desc: "Shell and heads, MAWP — ASME VIII-1" },
-    { label: "Pipe wall thickness", href: "/engineering/pipe-thickness-calculator", desc: "Required wall and schedule — ASME B31.3" },
-    { label: "Remaining life", href: "/engineering/remaining-life-calculator", desc: "Corrosion rate and next inspection — API 510/570/653" },
-    { label: "Damage mechanisms", href: "/engineering/damage-mechanism-screening", desc: "Screen all 69 API 571 mechanisms" },
-    { label: "Material spec finder", href: "/engineering/material-spec-finder", desc: "Every ASME Section II spec, tests and options" },
-    { label: "QAP builder", href: "/engineering/qap-builder", desc: "Material & NDE quality plan → Excel / PDF" },
-  ] },
-  { label: "Investing", links: [
-    { label: "Goal planner", href: "/tools/investment-planner", desc: "Monthly SIP, allocation and fund picks for a goal" },
-    { label: "Fund screener", href: "/tools/funds", desc: "Scores with expense ratios; compare funds" },
-    { label: "Stock analyzer", href: "/tools/stock-analyzer", desc: "The checks investors run before buying" },
-    { label: "All investing tools", href: "/tools", desc: "Stock screener, stock SIP builder, portfolio check" },
-  ] },
-  { label: "Learn", links: [
-    { label: "Codes academy", href: "/learn/codes", desc: "API 510–581, ASME Section II & V study modules" },
+  { label: "Learn", home: "/learn", blurb: "Plain-language study of API and ASME codes, clause by clause.", base: ["/learn"], cta: { label: "Search the library", href: "/learn/search" }, links: [
+    { label: "Codes academy", href: "/learn/codes", desc: "API 510, 570, 571, 574, 579, 580, 581 · ASME II & V" },
     { label: "API 510 / 570 exam prep", href: "/learn/exam-prep", desc: "Study plan, calculation drills, mock exams" },
-    { label: "All guides & search", href: "/learn", desc: "Search everything; short, plain-language guides" },
-    { label: "Damage mechanisms library", href: "/learn/damage-mechanisms", desc: "All 69 API 571 mechanisms explained" },
+    { label: "Damage mechanisms", href: "/learn/damage-mechanisms", desc: "All API 571 mechanisms explained" },
+    { label: "Guides", href: "/learn", desc: "Short guides on inspection topics" },
     { label: "Investing terms", href: "/learn/investing", desc: "CAGR, XIRR, Sharpe, P/E and more" },
   ] },
-  { label: "IRIS", links: [
-    { label: "IRIS inspection software", href: "/products/iris", desc: "Statutory & reliability inspections — office PC and offline tablet" },
-    { label: "Book an IRIS demo", href: "/products/iris#demo", desc: "Walkthrough on your kind of equipment" },
+  { label: "Engineering", home: "/engineering", blurb: "Free calculators and planners for inspection and plant engineers.", base: ["/engineering"], cta: { label: "All engineering tools", href: "/engineering" }, links: [
+    { label: "Inspection plan generator", href: "/engineering/inspection-plan-generator", desc: "API 510/570 plan as PDF" },
+    { label: "Damage mechanism screening", href: "/engineering/damage-mechanism-screening", desc: "Which API 571 mechanisms apply" },
+    { label: "Remaining life", href: "/engineering/remaining-life-calculator", desc: "Corrosion rate and next inspection" },
+    { label: "Vessel thickness", href: "/engineering/pressure-vessel-thickness-calculator", desc: "Shell, heads, MAWP — ASME VIII-1" },
+    { label: "Pipe thickness", href: "/engineering/pipe-thickness-calculator", desc: "Required wall and schedule — B31.3" },
+    { label: "Material spec finder", href: "/engineering/material-spec-finder", desc: "ASME Section II specs and tests" },
+    { label: "QAP builder", href: "/engineering/qap-builder", desc: "Material & NDE quality plan" },
   ] },
-  { label: "For MSMEs", links: [
-    { label: "How it works", href: "/for-msmes", desc: "How NumSum structures and solves MSME problems" },
-    { label: "Submit a problem", href: "/submit-problem", desc: "Private intake — reviewed before any public step" },
-    { label: "Challenges", href: "/challenges", desc: "Open problems for students, experts and startups" },
+  { label: "Investing", home: "/tools", blurb: "Free Indian stock and mutual fund research — screens, analysis, planning.", base: ["/tools"], cta: { label: "All investing tools", href: "/tools" }, links: [
+    { label: "Stock screener", href: "/tools/stocks", desc: "Filter listed companies by fundamentals" },
+    { label: "Stock analyzer", href: "/tools/stock-analyzer", desc: "Checks before you buy, with news signals" },
+    { label: "Fund screener", href: "/tools/funds", desc: "Compare mutual funds and costs" },
+    { label: "Goal planner", href: "/tools/investment-planner", desc: "Monthly SIP and allocation for a goal" },
+    { label: "Stock SIP builder", href: "/tools/stock-sip", desc: "Plan a basket of stocks" },
+    { label: "Portfolio check", href: "/tools/portfolio", desc: "Diversification and overlap" },
+  ] },
+  { label: "IRIS", home: "/products/iris", blurb: "Inspection and reliability software for process plants.", base: ["/products"], cta: { label: "Book a demo", href: "/products/iris#demo" }, links: [
+    { label: "IRIS inspection software", href: "/products/iris", desc: "Statutory and RBI inspections, offline tablet" },
+  ] },
+  { label: "Community", home: "/for-msmes", blurb: "MSME problems, open challenges and discussion.", base: ["/for-msmes", "/submit-problem", "/challenges", "/case-studies", "/community", "/msme-intelligence", "/research"], cta: { label: "Submit a problem", href: "/submit-problem" }, links: [
+    { label: "For MSMEs", href: "/for-msmes", desc: "How NumSum structures and solves problems" },
+    { label: "Challenges", href: "/challenges", desc: "Open problems for students and experts" },
+    { label: "Discussions", href: "/community", desc: "Questions and answers" },
     { label: "Case studies", href: "/case-studies", desc: "Validated outcomes" },
-    { label: "Community", href: "/community", desc: "Discussions across the ecosystem" },
     { label: "MSME intelligence", href: "/msme-intelligence", desc: "Sector, state and cluster data" },
   ] },
 ];
+/** Company links (shown in the menus' footer row, mobile drawer and site footer). */
 export const siteMenuLinks: MenuLink[] = [{ label: "About", href: "/about" }, { label: "Contact", href: "/contact" }];
+
+/** Section that owns a path, if any. */
+export function sectionFor(path: string) {
+  return siteMenu.find((g) => g.base.some((b) => path === b || path.startsWith(b + "/")));
+}
 export type NavGroup = { label: string; adminOnly?: boolean; links?: readonly (readonly [string, string])[]; sections?: readonly { label: string; links: readonly (readonly [string, string])[] }[] };
 
 export const phaseOnePublicLinks = [

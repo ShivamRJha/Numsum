@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { THEME_SCRIPT } from "@/components/theme-toggle";
 import { AuthProvider } from "@/components/auth-provider";
 import { SiteHeader } from "@/components/site-header";
+import { Motion } from "@/components/motion";
 import { SiteFooter } from "@/components/site-footer";
 import { brand } from "@/lib/brand";
 import { Analytics } from "@/components/analytics";
@@ -26,4 +27,4 @@ export const metadata: Metadata = {
   verification: process.env.NEXT_PUBLIC_GSC_VERIFICATION ? { google: process.env.NEXT_PUBLIC_GSC_VERIFICATION } : undefined,
   twitter: { card: "summary", title: "NumSum Labs", description: "MSME-first industrial innovation, inspection software and practical engineering tools." },
 };
-export default function RootLayout({ children }: { children: React.ReactNode }) { return <html lang="en" className="dark" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} /><script dangerouslySetInnerHTML={{ __html: CONSENT_SCRIPT }} /></head><body className="bg-navy font-sans antialiased">{GTM_ID && GTM_ID !== "off" && <noscript><iframe src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`} height="0" width="0" style={{ display: "none", visibility: "hidden" }} title="gtm" /></noscript>}<AuthProvider><SiteHeader />{children}<SiteFooter /><Analytics /></AuthProvider></body></html>; }
+export default function RootLayout({ children }: { children: React.ReactNode }) { return <html lang="en" className="dark" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} /><script dangerouslySetInnerHTML={{ __html: CONSENT_SCRIPT }} /></head><body className="bg-navy font-sans antialiased">{GTM_ID && GTM_ID !== "off" && <noscript><iframe src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`} height="0" width="0" style={{ display: "none", visibility: "hidden" }} title="gtm" /></noscript>}<AuthProvider><SiteHeader />{children}<SiteFooter /><Motion /><Analytics /></AuthProvider></body></html>; }
