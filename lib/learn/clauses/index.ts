@@ -86,7 +86,7 @@ export const CLAUSE_SETS: ClauseSet[] = [
   {
     slug: "asme-section-v-nde",
     rows: ASMEV_CLAUSES,
-    partial: "Subsection A, Articles 1, 2 and 4 (general requirements, radiography and ultrasonic examination of welds, with all appendices). Articles 5 to 19 are being added.",
+    partial: "Subsection A, Articles 1, 2, 4 and 5 (general requirements, radiography, and ultrasonic examination of welds and materials, with all appendices). Articles 6 to 19 are being added.",
     lesson: (id) => {
       const m = /^(?:T|[IVX]+(?:-[A-Z])?|[A-Z])-(\d{3,4})/.exec(id);
       if (!m) return undefined;
