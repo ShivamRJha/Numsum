@@ -9,7 +9,7 @@ import { useProgress } from "./progress";
 type Tab = "lessons" | "cards" | "quiz";
 const shuffle = <T,>(a: T[]) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 
-export function Trainer({ m, next }: { m: CodeModule; next?: { slug: string; short: string } }) {
+export function Trainer({ m, next, clauses = {} }: { m: CodeModule; next?: { slug: string; short: string }; clauses?: Record<string, number> }) {
   const { p, update } = useProgress(m.slug);
   const [tab, setTab] = useState<Tab>("lessons");
   const [i, setI] = useState(0);
@@ -44,7 +44,10 @@ export function Trainer({ m, next }: { m: CodeModule; next?: { slug: string; sho
         <h3 className="mt-6 text-sm font-semibold uppercase tracking-[.14em] text-white/50">Key points</h3>
         <ol className="mt-3 grid gap-2">{ch.points.map((pt, k) => <li key={pt} className="flex gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-3 leading-7 text-white/80"><span className="font-mono text-sm text-amber-100/70">{k + 1}</span><span>{pt}</span></li>)}</ol>
         {ch.deep && ch.deep.length > 0 && <div className="mt-5 grid gap-2">{ch.deep.map(([h, t]) => <details key={h} className="rounded-2xl border border-violet-200/20 bg-violet-300/[0.04] p-4"><summary className="cursor-pointer text-sm font-semibold text-violet-100">Deep dive — {h}</summary><p className="mt-2 text-sm leading-7 text-white/75">{t}</p></details>)}</div>}
-        {ch.tool && <Link href={ch.tool[1]} className="mt-5 inline-block text-sm text-amber-100 hover:text-white">Practice: {ch.tool[0]} →</Link>}
+        {(ch.tool || clauses[ch.id]) && <div className="mt-5 flex flex-wrap gap-3 text-sm">
+          {clauses[ch.id] ? <Link href={`/learn/codes/${m.slug}/clauses?lesson=${ch.id}`} className="rounded-full border border-emerald-300/30 px-3.5 py-1.5 text-emerald-100 hover:border-emerald-300/60">§ Read the {clauses[ch.id]} clauses behind this lesson →</Link> : null}
+          {ch.tool && <Link href={ch.tool[1]} className="rounded-full border border-amber-100/30 px-3.5 py-1.5 text-amber-100 hover:text-white">Practise: {ch.tool[0]} →</Link>}
+        </div>}
         <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5">
           <button type="button" onClick={() => go(i - 1)} disabled={i === 0} className="rounded-full border border-white/15 px-4 py-2 text-sm text-white/75 disabled:opacity-30">← Previous</button>
           <span className="hidden text-xs text-white/35 sm:inline">Tip: use ← → keys</span>

@@ -112,3 +112,11 @@ export const CLAUSE_SETS: ClauseSet[] = [
 
 export const clauseSet = (slug: string) => CLAUSE_SETS.find((s) => s.slug === slug);
 export const clauseCount = (s: ClauseSet) => s.rows.filter((r) => r[2]).length;
+
+/** lesson id → how many explained clauses it covers (clause guide → lesson mapping, reversed) */
+export function clausesPerLesson(s: ClauseSet): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [id, , text] of s.rows) { if (!text) continue; const l = s.lesson(id); if (l) out[l] = (out[l] || 0) + 1; }
+  return out;
+}
+export const totalClauses = () => CLAUSE_SETS.reduce((n, s) => n + clauseCount(s), 0);

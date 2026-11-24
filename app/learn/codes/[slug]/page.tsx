@@ -9,7 +9,8 @@ import { CodesNote } from "@/components/learn/codes-note";
 import { IrisCta } from "@/components/eng/iris-cta";
 import { Visual } from "@/components/learn/visuals";
 import { ModuleProgress } from "@/components/learn/train/module-progress";
-import { clauseSet, clauseCount } from "@/lib/learn/clauses";
+import { clauseSet, clausesPerLesson } from "@/lib/learn/clauses";
+import { ModuleTabs } from "@/components/learn/module-tabs";
 
 export const dynamic = "force-static";
 export const dynamicParams = false;
@@ -25,6 +26,7 @@ export default async function CodePage({ params }: { params: Promise<{ slug: str
   const path = `/learn/codes/${c.slug}`;
   const i = CODES.findIndex((x) => x.slug === c.slug);
   const prev = CODES[i - 1], next = CODES[i + 1];
+  const cs = clauseSet(c.slug); const perLesson = cs ? clausesPerLesson(cs) : {};
   return <>
     <JsonLd data={[articleLd({ title: c.title, description: c.description, path, about: c.code }), faqLd(c.quiz)]} />
     <Crumbs items={[["Codes academy", "/learn/codes"], [c.short, path]]} />
@@ -37,7 +39,8 @@ export default async function CodePage({ params }: { params: Promise<{ slug: str
         <div className="rounded-2xl border border-white/10 p-4"><dt className="text-white/45">Where it fits</dt><dd className="mt-1 text-white/85">{c.stage}</dd></div>
         <div className="rounded-2xl border border-white/10 p-4"><dt className="text-white/45">Who uses it</dt><dd className="mt-1 text-white/85">{c.audience}</dd></div>
       </dl>
-      <div className="mt-6 flex flex-wrap items-center gap-3"><Link href={`/learn/codes/${c.slug}/train`} className="rounded-full bg-amber-100 px-5 py-2.5 text-sm font-semibold text-black hover:bg-white">▶ Start training mode</Link><span className="text-sm text-white/50">{c.chapters.length} lessons · {c.chapters.filter((x) => x.visual).length} interactive diagrams · {c.mcq?.length || 0}-question quiz</span><ModuleProgress slug={c.slug} total={c.chapters.length} /></div>{clauseSet(c.slug) && <Link href={`/learn/codes/${c.slug}/clauses`} className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-300/25 bg-emerald-300/[.06] p-4 hover:border-emerald-300/50"><span><span className="font-semibold text-white">Clause-by-clause guide</span><span className="block text-sm text-white/60">Every one of the {clauseCount(clauseSet(c.slug)!)} clauses explained in plain English, searchable by number or word.</span></span><span className="text-sm text-emerald-100">Open →</span></Link>}
+      <ModuleTabs slug={c.slug} active="overview" className="mt-6" />
+      <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-white/50"><span>{c.chapters.length} lessons · {c.chapters.filter((x) => x.visual).length} interactive diagrams · {c.mcq?.length || 0}-question quiz</span><ModuleProgress slug={c.slug} total={c.chapters.length} /></div>
     </header>
 
     <div className="mt-10 grid gap-10 lg:grid-cols-[15rem_minmax(0,1fr)]">
@@ -69,7 +72,11 @@ export default async function CodePage({ params }: { params: Promise<{ slug: str
           {ch.deep && ch.deep.length > 0 && <div className="mt-4 grid gap-2">{ch.deep.map(([h, t]) => <details key={h} className="rounded-2xl border border-violet-200/20 bg-violet-300/[0.04] p-4"><summary className="cursor-pointer text-sm font-semibold text-violet-100">Deep dive — {h}</summary><p className="mt-2 text-sm leading-7 text-white/75">{t}</p></details>)}</div>}
           <div className="mt-4 flex flex-wrap items-center gap-2">
             {ch.tags.map((k) => { const t = topicByKey(k); return <Link key={k} href={`/learn/codes/topics/${t.slug}`} className="rounded-full border border-white/12 px-2.5 py-1 text-xs text-white/60 hover:text-white">#{t.name}</Link>; })}
-            {ch.tool && <Link href={ch.tool[1]} className="ml-auto rounded-full bg-amber-100 px-3.5 py-1.5 text-xs font-semibold text-black hover:bg-white">{ch.tool[0]} →</Link>}
+            <span className="ml-auto flex flex-wrap gap-2">
+              <Link href={`/learn/codes/${c.slug}/train#${ch.id}`} className="rounded-full border border-white/15 px-3.5 py-1.5 text-xs text-white/75 hover:text-white">▶ Train this lesson</Link>
+              {perLesson[ch.id] ? <Link href={`/learn/codes/${c.slug}/clauses?lesson=${ch.id}`} className="rounded-full border border-emerald-300/30 px-3.5 py-1.5 text-xs text-emerald-100 hover:border-emerald-300/60">§ {perLesson[ch.id]} clauses behind this →</Link> : null}
+              {ch.tool && <Link href={ch.tool[1]} className="rounded-full bg-amber-100 px-3.5 py-1.5 text-xs font-semibold text-black hover:bg-white">{ch.tool[0]} →</Link>}
+            </span>
           </div>
         </section>)}
 
