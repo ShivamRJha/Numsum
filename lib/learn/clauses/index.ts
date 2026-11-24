@@ -5,6 +5,7 @@ import { API574_CLAUSES } from "./api-574";
 import { API580_CLAUSES } from "./api-580";
 import { API571_CLAUSES } from "./api-571";
 import { ASMEV_CLAUSES } from "./asme-v";
+import { API579_CLAUSES } from "./api-579";
 
 export type { ClauseRow };
 export type ClauseSet = {
@@ -93,6 +94,18 @@ export const CLAUSE_SETS: ClauseSet[] = [
       const n = m[1], art = n.length === 4 ? n.slice(0, 2) : n[0];
       if (art === "1") return id.startsWith("II-") || id.startsWith("T-12") ? "personnel-procedures" : id.startsWith("A-") ? "choose" : "how-it-works";
       return ({ "2": "rt", "4": "ut-welds", "5": "ut-materials", "6": "pt", "7": "mt", "8": "et", "9": "vt", "10": "lt" } as Record<string, string>)[art] ?? "ae-advanced";
+    },
+  },
+  {
+    slug: "api-579-fitness-for-service",
+    rows: API579_CLAUSES,
+    lesson: (id) => {
+      const m = /^(\d+)([A-H]?)/.exec(id);
+      if (!m) return undefined;
+      const part = m[1], annex = m[2];
+      if (part === "2") return annex === "C" || annex === "F" ? "rsf" : id.startsWith("2.4") ? "levels" : "procedure";
+      if (part === "1") return "procedure";
+      return ({ "3": "brittle", "4": "general-metal-loss", "5": "local-metal-loss", "6": "pitting", "7": "blisters", "8": "misalignment", "9": "cracks", "10": "creep", "11": "fire", "12": "dents", "13": "laminations", "14": "fatigue" } as Record<string, string>)[part];
     },
   },
 ];
