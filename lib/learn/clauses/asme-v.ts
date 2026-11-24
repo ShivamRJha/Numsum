@@ -8,5 +8,9 @@ import { P5 } from "./asme-v.p5";
 import { P6 } from "./asme-v.p6";
 import { P7 } from "./asme-v.p7";
 import { P8 } from "./asme-v.p8";
+import { P9 } from "./asme-v.p9";
+import { P10 } from "./asme-v.p10";
+import { P11 } from "./asme-v.p11";
+import { P12 } from "./asme-v.p12";
 
-export const ASMEV_CLAUSES: ClauseRow[] = [...P1, ...P2, ...P3, ...P4, ...P5, ...P6, ...P7, ...P8];
+export const ASMEV_CLAUSES: ClauseRow[] = [...P1, ...P2, ...P3, ...P4, ...P5, ...P6, ...P7, ...P8, ...P9, ...P10, ...P11, ...P12];
