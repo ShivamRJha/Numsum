@@ -6,6 +6,7 @@ import { GUIDES } from "@/lib/learn/guides";
 import { TERMS } from "@/lib/learn/terms";
 import { CODES, TOPICS } from "@/lib/learn/codes";
 import { CLAUSE_SETS } from "@/lib/learn/clauses";
+import { NIFTY500 } from "@/lib/invest/sources";
 
 type F = MetadataRoute.Sitemap[number]["changeFrequency"];
 const routes: [string, number, F][] = [
@@ -29,6 +30,7 @@ const routes: [string, number, F][] = [
   ["/tools/funds", 0.8, "daily"],
   ["/tools/stocks", 0.8, "daily"],
   ["/tools/stock-analyzer", 0.8, "daily"],
+  ...NIFTY500.map(([sym]): [string, number, F] => [`/tools/stock-analyzer/${encodeURIComponent(sym)}`, 0.6, "daily"]),
   ["/tools/stock-sip", 0.7, "daily"],
   ["/tools/portfolio", 0.6, "monthly"],
   ["/tools/methodology", 0.5, "monthly"],

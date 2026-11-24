@@ -40,6 +40,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ symbol:
   const h = heat(stats, fundamentals, industryPe);
   const v = verdict(checks, stats, h);
 
+  const peerRows = industry && summary ? summary.rows.filter((r) => r.i === industry) : [];
+  const peers = [...peerRows].sort((a, b) => (b.mc ?? 0) - (a.mc ?? 0)).slice(0, 10).concat(row && !peerRows.sort((a, b) => (b.mc ?? 0) - (a.mc ?? 0)).slice(0, 10).some((r) => r.s === symbol) ? [row] : []).map((r) => ({ s: r.s, n: r.n, px: r.px, pe: r.pe, pb: r.pb, roe: r.roe, de: r.de, dy: r.dy, mc: r.mc, r1: r.r1, c3: r.c3, sc: r.sc, sig: r.sig }));
   const adj = adjustSplits(priced.bars).bars;
   const daily = adj.slice(-520);
   const sma = (n: number, i: number) => { const a = adj.length - daily.length + i; if (a < n - 1) return null; let s = 0; for (let k = a - n + 1; k <= a; k++) s += adj[k].c; return Math.round((s / n) * 100) / 100; };
@@ -48,7 +50,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ symbol:
 
   return json({
     symbol, name: fundamentals?.name || uni?.[1] || row?.n || symbol, industry, inNifty500: Boolean(uni),
-    stats, fundamentals, checks, verdict: v, indexPe: index?.pe ?? null, industryPe,
+    stats, fundamentals, checks, verdict: v, peers, indexPe: index?.pe ?? null, industryPe,
     screen: row ? { score: row.sc, signal: row.sig, rankOf: summary?.count } : null,
     chart, weekly: weekly(adj).slice(-530), indexWeekly: idxWeekly.slice(-530),
     dataCheck: { prices: priced.source, priceCheck: priced.check, fundamentals: fu ? "Yahoo Finance (live)" : row ? "Last nightly refresh" : "unavailable" },

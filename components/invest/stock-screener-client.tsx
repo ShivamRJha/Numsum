@@ -7,9 +7,11 @@ import { Explain, Term } from "@/components/invest/explain";
 import { Card } from "@/components/ui";
 import type { StockLite } from "@/lib/invest/stocks";
 import { cn } from "@/lib/utils";
+import { compileQuery, QUERY_EXAMPLES, QUERY_FIELDS } from "@/lib/invest/query";
 
 type Screen = { key: string; label: string; help: string; test: (r: StockLite, ind: Record<string, { pe: number | null }>) => boolean };
 const SCREENS: Screen[] = [
+  { key: "custom", label: "Custom query ✦", help: "Write your own screen in plain words, joined with AND / OR. Percentages are typed as percent (ROE > 15 means 15%); market cap is in ₹ crore.", test: () => true },
   { key: "all", label: "All stocks", help: "The full Nifty 500 ranked by the long-term score.", test: () => true },
   { key: "compounders", label: "Steady compounders", help: "3-year return above 12% a year, positive in at least 70% of 1-year periods, and not overheated — the kind of stock long-term SIP investors look for.", test: (r) => (r.c3 ?? 0) > 0.12 && (r.pos ?? 0) >= 0.7 && r.hl !== "Hot" && r.hl !== "Overheated" },
   { key: "quality", label: "Quality at a fair price", help: "ROE above 15%, debt/equity below 1, P/E below its industry median and price above the 200-day average.", test: (r, ind) => (r.roe ?? 0) > 0.15 && (r.de === null || r.de < 1) && r.pe !== null && r.pe > 0 && ind[r.i]?.pe != null && r.pe < (ind[r.i].pe as number) && (r.tr ?? -1) > 0 },
@@ -26,6 +28,8 @@ const SORTS: [string, string, (r: StockLite) => number | null, boolean][] = [
 
 export function StockScreenerClient({ rows, asOf, indexPe, methodology, industries, withFundamentals }: { rows: StockLite[]; asOf: string | null; indexPe: number | null; methodology: string; industries: Record<string, { pe: number | null; count: number }>; withFundamentals: number }) {
   const [screen, setScreen] = useState("all");
+  const [query, setQuery] = useState(QUERY_EXAMPLES[0]);
+  const compiled = useMemo(() => compileQuery(query), [query]);
   const [q, setQ] = useState("");
   const [ind, setInd] = useState("all");
   const [sig, setSig] = useState("all");
@@ -38,9 +42,9 @@ export function StockScreenerClient({ rows, asOf, indexPe, methodology, industri
   const so = SORTS.find((s) => s[0] === sort) || SORTS[0];
   const list = useMemo(() => {
     const t = q.trim().toLowerCase();
-    return rows.filter((r) => (!t || r.s.toLowerCase().includes(t) || r.n.toLowerCase().includes(t)) && (ind === "all" || r.i === ind) && (sig === "all" || r.sig === sig) && (!liquid || (r.liq ?? 0) >= 5) && (!cool || (r.hl !== "Hot" && r.hl !== "Overheated")) && sc.test(r, industries))
+    return rows.filter((r) => (!t || r.s.toLowerCase().includes(t) || r.n.toLowerCase().includes(t)) && (ind === "all" || r.i === ind) && (sig === "all" || r.sig === sig) && (!liquid || (r.liq ?? 0) >= 5) && (!cool || (r.hl !== "Hot" && r.hl !== "Overheated")) && (screen === "custom" ? ("test" in compiled ? compiled.test(r) : false) : sc.test(r, industries)))
       .sort((a, b) => { const va = so[2](a), vb = so[2](b); if (va === null) return 1; if (vb === null) return -1; return so[3] ? va - vb : vb - va; });
-  }, [rows, q, ind, sig, liquid, cool, sc, so, industries]);
+  }, [rows, q, ind, sig, liquid, cool, sc, so, industries, screen, compiled]);
 
   if (!rows.length) return <Card><p className="text-white/60">Stock data is refreshed every night from NSE prices; scores will appear here after the first refresh. You can already analyse any stock in the <Link href="/tools/stock-analyzer" className="underline">stock analyzer</Link>.</p></Card>;
 
@@ -48,6 +52,12 @@ export function StockScreenerClient({ rows, asOf, indexPe, methodology, industri
     <div className="flex gap-2 overflow-x-auto pb-1">{SCREENS.map((s) => <button key={s.key} type="button" onClick={() => { setScreen(s.key); setLimit(50); }} className={cn("whitespace-nowrap rounded-full border px-4 py-2 text-sm", screen === s.key ? "border-amber-100/70 bg-amber-100/15 text-amber-50" : "border-white/12 text-white/65 hover:text-white")}>{s.label}</button>)}</div>
     <Card className="premium-card">
       <p className="text-sm text-white/60">{sc.help}</p>
+      {screen === "custom" && <div className="mt-4">
+        <textarea aria-label="Screen query" value={query} onChange={(e) => setQuery(e.target.value)} rows={2} spellCheck={false} className={cn(field, "font-mono text-sm")} />
+        {"error" in compiled ? <p className="mt-2 text-sm text-red-200">{compiled.error}</p> : <p className="mt-2 text-xs text-emerald-200/80">Query OK</p>}
+        <div className="mt-2 flex flex-wrap gap-1.5">{QUERY_EXAMPLES.map((x) => <button key={x} type="button" onClick={() => setQuery(x)} className="rounded-full border border-white/12 px-3 py-1 font-mono text-[11px] text-white/60 hover:border-amber-100/50 hover:text-white">{x}</button>)}</div>
+        <details className="mt-2 text-xs text-white/50"><summary className="cursor-pointer text-white/65">Fields you can use</summary><p className="mt-2 leading-6">{QUERY_FIELDS.map((f) => `${f.names[0]}${f.pct ? " (%)" : f.unit ? ` (${f.unit})` : ""}`).join(" · ")}</p></details>
+      </div>}
       <Explain>Scores are built for holding at least a year through a SIP: business quality and fair price count most; risk and the long-term trend next. The <Term id="heat">heat</Term> column warns when a stock has already risen too much — those are down-rated. Tap any column name for what it means.</Explain>
       <div className="mt-4 grid gap-3 md:grid-cols-[1.2fr_1fr_.8fr_1fr]">
         <input aria-label="Search stocks" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name or symbol…" className={field} />
