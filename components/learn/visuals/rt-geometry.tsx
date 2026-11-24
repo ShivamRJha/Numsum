@@ -8,7 +8,7 @@ export function RtGeometry() {
   const ok = ug <= lim; const sx = 300, sy = 20, oy = 40 + (D / 1500) * 140, fy = oy + Math.max(d, 4) * 0.6;
   return <VizFrame title="Interactive — radiographic geometry and unsharpness" caption="Ug = F × d ÷ D, where F is the source size, D the source-to-object distance and d the object-to-detector distance. Recommended maximum Ug rises with thickness (0.51 mm below 50 mm up to 1.78 mm above 100 mm); d is used here as the material thickness for simplicity.">
     <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_16rem]">
-      <svg viewBox="0 0 600 260" className="w-full" role="img" aria-label="Source, object and film geometry">
+      <svg viewBox="0 0 600 310" className="w-full" role="img" aria-label="Source, object and film geometry">
         <rect x={sx - F * 3} y={sy - 6} width={Math.max(F * 6, 4)} height={10} fill="var(--viz-accent)" /><text x={sx + 30} y={sy + 2} style={{ fill: "var(--viz-accent)" }}>source (F = {F} mm)</text>
         <rect x={180} y={oy} width={240} height={fy - oy} fill="var(--viz-steel)" stroke="var(--viz-faint)" /><text x={430} y={(oy + fy) / 2 + 4} className="muted">object</text>
         <circle cx={300} cy={oy + 4} r={3} fill="var(--viz-bad)" />
