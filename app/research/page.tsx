@@ -1,16 +1,46 @@
 import type { Metadata } from "next";
-export const metadata: Metadata = { title: "Knowledge & Research — NumSum Labs", description: "Approved and member-submitted research, technology intelligence, case studies, and practical knowledge for MSME problem solving." };
-import { Suspense } from "react";
-import { EmptyState, LoadingState } from "@/components/data-states";
-import { Card } from "@/components/ui";
-import { getPublicResearchItems } from "@/lib/repositories/firestore";
+import Link from "next/link";
+import { LEVELS, PATHS } from "@/lib/research/paths";
+import { ResearchShell } from "@/components/research/shell";
+import { JoinButton } from "@/components/research/member-only";
 
-async function ResearchDirectory() {
-  const posts = await getPublicResearchItems().catch(() => []);
-  if (!posts.length) return <EmptyState message="Published and peer-reviewed research will appear here." />;
-  return <div className="grid gap-4 md:grid-cols-2">{posts.map((post) => <Card key={post.id}><p className="text-xs uppercase tracking-[.2em] text-blue-300">{post.researchType || post.category || "research"}</p><h2 className="mt-2 font-display text-2xl">{post.title}</h2><p className="mt-2 text-sm text-white/60">{[post.country, post.industrySegment, post.technologyArea, post.maturityLevel].filter(Boolean).join(" · ")}</p><p className="mt-4 text-white/75">{post.summary || post.abstract}</p>{(post.practicalRelevance || post.relevanceToMSME) && <p className="mt-3 rounded-xl bg-blue-400/10 p-3 text-sm text-blue-100">Practical MSME relevance: {post.practicalRelevance || post.relevanceToMSME}</p>}<div className="mt-4 flex flex-wrap gap-2 text-sm"><span className="rounded-full bg-white/10 px-3 py-1">▲ {post.upvotes?.length || 0} upvotes</span><span className="rounded-full bg-white/10 px-3 py-1">Peer review: {post.status || "published"}</span>{post.problemStatementId && <a className="rounded-full border border-blue-300/30 px-3 py-1 text-blue-100" href={`/problem-statements/${post.problemStatementId}`}>Linked MSME challenge</a>}</div><p className="mt-3 text-sm text-white/50">Source: {post.sourceName || (post.authors || []).join(", ") || "Member submitted"}</p><div className="mt-2 flex flex-wrap gap-3 text-sm">{(post.pdf || post.documentLink || post.researchLink || post.sourceLink) && <a className="text-blue-200" href={post.pdf || post.documentLink || post.researchLink || post.sourceLink} target="_blank">Open PDF / source</a>}{post.documentLinks?.map((link, index) => <a key={link} className="text-blue-200" href={link} target="_blank">Supporting link {index + 1}</a>)}</div>{post.tags?.length ? <p className="mt-3 text-xs text-white/45">Tags: {post.tags.join(", ")}</p> : null}</Card>)}</div>;
+export const dynamic = "force-static";
+const title = "Research Commons — Learn, Read and Research in Mechanical, Chemical and Electrical Engineering";
+const description = "A free space for engineering students, scholars and faculty: learning paths from fundamentals to recent developments, the best books and journals, a daily research radar, discussions, PhD and postdoc positions and a personal progress dashboard.";
+export const metadata: Metadata = { title, description, alternates: { canonical: "/research" }, openGraph: { title, description, url: "/research" } };
+
+const FEATURES = [
+  ["Learning paths", "Fundamentals → advanced → recent developments for mechanical, chemical and electrical engineering, with the world's standard textbooks and the journals that matter.", "/research/paths", "Open to everyone"],
+  ["Research radar", "Set your research direction once. New preprints and notable journal papers in your keywords arrive every day, and the best ones as alerts.", "/research/radar", "Members"],
+  ["Discussions", "Ask about a method, a paper or a result and talk it through with students, scholars and faculty.", "/research/discuss", "Members"],
+  ["Positions", "PhD, postdoc, internship and collaboration openings, posted by the people offering them.", "/research/positions", "Members"],
+  ["Researchers", "A directory of members who choose to be found: field, interests and what they are looking for.", "/research/people", "Members"],
+  ["My dashboard", "Private targets with due dates, a reading list, path progress and alerts. Only you see it.", "/research/me", "Members"],
+] as const;
+
+export default function CommonsHome() {
+  return <ResearchShell active="/research" title="Learn deeply. Research boldly. Together." intro={<p>The Research Commons is a free place to grow from strong fundamentals to original research — for B.Tech students, final-year students, M.Tech and PhD scholars, and professors.</p>}>
+    <div className="flex flex-wrap items-center gap-3"><JoinButton /><Link href="/research/paths" className="rounded-full border border-white/15 px-5 py-2.5 text-sm text-white/80 hover:text-white">Browse learning paths</Link></div>
+
+    <section className="mt-12"><h2 className="font-display text-2xl font-semibold text-white">How growth works here</h2>
+      <ol className="mt-5 grid gap-4 md:grid-cols-4">{[["1", "Build fundamentals", "Read the classic textbooks properly and solve their problems."], ["2", "Go advanced", "Pick a direction and study it at research depth."], ["3", "Follow the frontier", "Read the leading journals and the daily radar for your keywords."], ["4", "Do research", "Set targets, find collaborators or a position, and publish."]].map(([n, t, d]) => <li key={n} className="premium-card rounded-3xl border p-5"><span className="font-mono text-3xl text-violet-200/70">{n}</span><p className="mt-2 font-semibold text-white">{t}</p><p className="mt-1 text-sm text-white/60">{d}</p></li>)}</ol>
+    </section>
+
+    <section className="mt-14"><h2 className="font-display text-2xl font-semibold text-white">What's inside</h2>
+      <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">{FEATURES.map(([t, d, h, who]) => <Link key={h} href={h} className="premium-card group flex flex-col rounded-3xl border p-6 hover:border-violet-200/50"><span className="flex items-center justify-between"><span className="text-lg font-semibold text-white">{t}</span><span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${who === "Members" ? "bg-violet-200/15 text-violet-100" : "bg-emerald-300/15 text-emerald-100"}`}>{who}</span></span><span className="mt-2 flex-1 text-sm leading-6 text-white/60">{d}</span><span className="mt-4 text-sm font-semibold text-violet-100 group-hover:text-white">Open →</span></Link>)}</div>
+    </section>
+
+    <section className="mt-14"><h2 className="font-display text-2xl font-semibold text-white">Three disciplines to start</h2>
+      <div className="mt-5 grid gap-4 md:grid-cols-3">{PATHS.map((p) => <Link key={p.slug} href={`/research/paths/${p.slug}`} className="premium-card rounded-3xl border p-6 hover:border-violet-200/50"><p className="font-display text-xl font-semibold text-white">{p.name}</p><p className="mt-2 text-sm text-white/60">{p.tagline}</p><p className="mt-4 font-mono text-xs text-white/45">{p.stages.reduce((n, s) => n + s.groups.reduce((m, g) => m + g.items.filter((i) => i.kind === "book").length, 0), 0)} books · {p.journals.length} journals · {p.directions.length} research directions</p></Link>)}</div>
+    </section>
+
+    <section className="mt-14"><h2 className="font-display text-2xl font-semibold text-white">Where you start depends on where you are</h2>
+      <div className="mt-5 overflow-hidden rounded-3xl border border-white/10">{LEVELS.map((l) => <div key={l.key} className="grid gap-2 border-t border-white/10 p-4 first:border-t-0 md:grid-cols-[14rem_1fr]"><p className="font-semibold text-white">{l.label}</p><p className="text-sm leading-6 text-white/65">{l.advice}</p></div>)}</div>
+    </section>
+
+    <section className="mt-14 grid gap-4 md:grid-cols-2">
+      <div className="rounded-3xl border border-white/10 p-6"><p className="font-semibold text-white">Privacy by default</p><p className="mt-2 text-sm leading-6 text-white/60">Your targets, reading list and progress are visible only to you. You choose whether to appear in the researcher directory.</p></div>
+      <Link href="/research/library" className="rounded-3xl border border-white/10 p-6 hover:border-violet-200/40"><p className="font-semibold text-white">Research library →</p><p className="mt-2 text-sm leading-6 text-white/60">Peer-reviewed and member-submitted research linked to real industrial problems.</p></Link>
+    </section>
+  </ResearchShell>;
 }
-export default function Research() { return <main className="min-h-screen bg-navy px-6 py-10"><section className="mx-auto max-w-7xl"><div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-sm uppercase tracking-[.3em] text-blue-300">Knowledge & Research</p><h1 className="mt-3 font-display text-5xl">Knowledge & Research</h1><p className="mt-3 max-w-3xl text-white/60">Anyone can publish their research or practical work here for admin review, peer review, and community upvotes. Keep submissions simple and include a PDF, DOI, Drive, GitHub, or source link.</p></div><a href="/research/upload" className="rounded-full bg-white px-5 py-3 font-semibold text-black">Add research</a></div><Card className="mt-6 border-blue-300/20 bg-blue-500/10"><p className="text-sm text-blue-100">Workflow: submit research → admin review → publish → peers discuss/upvote. Link the research to an MSME challenge if it solves or explains a submitted problem.</p></Card><div className="mt-8"><Suspense fallback={<LoadingState label="Loading research" />}><ResearchDirectory /></Suspense></div></section></main>; }
-
-/** Reads live records on every request (data rules differ per collection). */
-export const dynamic = "force-dynamic";

@@ -51,7 +51,7 @@ export function SiteHeader() {
             const here = section?.label === g.label; const isOpen = menu === g.label;
             return <div key={g.label} className="relative" onMouseEnter={() => enter(g.label)}>
               <button type="button" aria-expanded={isOpen} aria-haspopup="true" onClick={() => setMenu(isOpen ? null : g.label)}
-                className={cn("relative flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-2 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300/60", (here || isOpen) && "text-white", isOpen && "bg-white/[0.07]")}>
+                className={cn("relative flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-2 transition xl:px-3 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300/60", (here || isOpen) && "text-white", isOpen && "bg-white/[0.07]")}>
                 {g.label}<ChevronDown size={13} className={cn("opacity-60 transition", isOpen && "rotate-180")} aria-hidden="true" />
                 {here && <span className="absolute inset-x-3 -bottom-[13px] h-0.5 rounded-full bg-amber-100" aria-hidden="true" />}
               </button>
@@ -68,7 +68,7 @@ export function SiteHeader() {
           })}
         </div>
 
-        <div className="ml-auto hidden items-center gap-2 lg:flex"><CommandPalette /><ThemeToggle /><AuthNav /></div>
+        <div className="ml-auto hidden items-center gap-2 lg:flex"><div className="hidden 2xl:block"><CommandPalette /></div><div className="2xl:hidden"><CommandPalette compact /></div><ThemeToggle /><AuthNav /></div>
         <div className="ml-auto flex items-center gap-2 lg:hidden"><CommandPalette compact /><button className="rounded-full border border-white/10 p-2.5 text-white/75" aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} aria-controls="mobile-site-menu" onClick={() => setOpen((value) => !value)}>{open ? <X size={18} /> : <Menu size={18} />}</button></div>
       </nav>
 

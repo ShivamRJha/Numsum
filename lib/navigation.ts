@@ -12,6 +12,16 @@ export const siteMenu: MenuGroup[] = [
     { label: "Damage mechanisms", href: "/learn/damage-mechanisms", desc: "All API 571 mechanisms explained" },
     { label: "Short guides", href: "/learn#guides", desc: "Five-minute reads on inspection topics" },
   ] },
+  { label: "Research", home: "/research", blurb: "Learn deeply, follow the frontier and research together — paths, radar, positions and your private dashboard.", base: ["/research"], cta: { label: "My research dashboard", href: "/research/me" }, links: [
+    { label: "Research Commons", href: "/research", desc: "What it is and how it works" },
+    { label: "Learning paths", href: "/research/paths", desc: "Mechanical, chemical, electrical — books and journals" },
+    { label: "Research radar", href: "/research/radar", desc: "New papers in your direction, daily" },
+    { label: "Discussions", href: "/research/discuss", desc: "Methods, papers and ideas" },
+    { label: "Positions", href: "/research/positions", desc: "PhD, postdoc and collaborations" },
+    { label: "Researchers", href: "/research/people", desc: "Find people by field and interest" },
+    { label: "My dashboard", href: "/research/me", desc: "Private targets, reading and progress" },
+    { label: "Research library", href: "/research/library", desc: "Research linked to industrial problems" },
+  ] },
   { label: "Engineering", home: "/engineering", blurb: "Free calculators and planners for inspection and plant engineers.", base: ["/engineering"], cta: { label: "All engineering tools", href: "/engineering" }, links: [
     { label: "Inspection plan generator", href: "/engineering/inspection-plan-generator", desc: "API 510/570 plan as PDF" },
     { label: "Damage mechanism screening", href: "/engineering/damage-mechanism-screening", desc: "Which API 571 mechanisms apply" },
@@ -24,7 +34,7 @@ export const siteMenu: MenuGroup[] = [
   { label: "IRIS", home: "/products/iris", blurb: "Inspection and reliability software for process plants.", base: ["/products"], cta: { label: "Book a demo", href: "/products/iris#demo" }, links: [
     { label: "IRIS inspection software", href: "/products/iris", desc: "Statutory and RBI inspections, offline tablet" },
   ] },
-  { label: "Community", home: "/for-msmes", blurb: "MSME problems, open challenges and discussion.", base: ["/for-msmes", "/submit-problem", "/challenges", "/case-studies", "/community", "/msme-intelligence", "/research"], cta: { label: "Submit a problem", href: "/submit-problem" }, links: [
+  { label: "Community", home: "/for-msmes", blurb: "MSME problems, open challenges and discussion.", base: ["/for-msmes", "/submit-problem", "/challenges", "/case-studies", "/community", "/msme-intelligence"], cta: { label: "Submit a problem", href: "/submit-problem" }, links: [
     { label: "For MSMEs", href: "/for-msmes", desc: "How NumSum structures and solves problems" },
     { label: "Challenges", href: "/challenges", desc: "Open problems for students and experts" },
     { label: "Discussions", href: "/community", desc: "Questions and answers" },
@@ -62,7 +72,7 @@ export const phaseOnePublicLinks = [
 
 export const secondaryPublicLinks = [
   ["Case Studies", "/case-studies"],
-  ["Research & Knowledge", "/research"],
+  ["Research Commons", "/research"],
   ["Impact Metrics", "/pilots"],
   ["Contact", "/contact"],
 ] as const;
