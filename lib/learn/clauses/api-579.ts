@@ -24,5 +24,6 @@ import { P21 } from "./api-579.p21";
 import { P22 } from "./api-579.p22";
 import { P23 } from "./api-579.p23";
 import { P24 } from "./api-579.p24";
+import { P25 } from "./api-579.p25";
 
-export const API579_CLAUSES: ClauseRow[] = [...P1, ...P2, ...P3, ...P4, ...P5, ...P6, ...P7, ...P8, ...P9, ...P10, ...P11, ...P12, ...P13, ...P14, ...P15, ...P16, ...P17, ...P18, ...P19, ...P20, ...P21, ...P22, ...P23, ...P24];
+export const API579_CLAUSES: ClauseRow[] = [...P1, ...P2, ...P3, ...P4, ...P5, ...P6, ...P7, ...P8, ...P9, ...P10, ...P11, ...P12, ...P13, ...P14, ...P15, ...P16, ...P17, ...P18, ...P19, ...P20, ...P21, ...P22, ...P23, ...P24, ...P25];
