@@ -16,7 +16,18 @@ export type Chapter = {
   formula?: string[];
   tags: TopicKey[];
   tool?: [string, string];
+  /** Interactive diagram shown with the chapter. */
+  visual?: VisualKey;
+  /** Deeper explanation blocks: [heading, text]. */
+  deep?: [string, string][];
 };
+
+export type VisualKey =
+  | "corrosion-timeline" | "risk-matrix" | "pof-builder" | "lta-rsf" | "piping-circuit" | "ffs-part-map"
+  | "spec-anatomy" | "parent-specs" | "heat-treatment" | "nde-selector" | "rt-geometry" | "ut-skip"
+  | "pt-timeline" | "mt-directions" | "dm-families" | "interval-compare" | "code-flow" | "allowable-stress";
+
+export type Mcq = { q: string; options: string[]; answer: number; why: string };
 
 export type CodeModule = {
   slug: string;
@@ -35,5 +46,6 @@ export type CodeModule = {
   example?: { title: string; steps: string[] };
   pitfalls: string[];
   quiz: [string, string][];
+  mcq?: Mcq[];
   related: string[];
 };

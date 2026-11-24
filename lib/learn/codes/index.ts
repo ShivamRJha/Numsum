@@ -8,11 +8,14 @@ import { API_580 } from "./api-580";
 import { API_581 } from "./api-581";
 import { ASME_II } from "./asme-ii";
 import { ASME_V } from "./asme-v";
+import { EXTRAS, withExtras } from "./extras";
 
 export type { Chapter, CodeModule, TopicKey } from "../codes-types";
 
 /** In learning order. */
-export const CODES: CodeModule[] = [API_571, API_580, API_581, API_510, API_570, API_574, API_579, ASME_II, ASME_V].sort((a, b) => a.order - b.order);
+export const CODES: CodeModule[] = [API_571, API_580, API_581, API_510, API_570, API_574, API_579, ASME_II, ASME_V]
+  .map((m) => ({ ...m, chapters: withExtras(m.slug, m.chapters), mcq: [...(m.mcq || []), ...(EXTRAS[m.slug]?.mcq || [])] }))
+  .sort((a, b) => a.order - b.order);
 export const codeBySlug = (s: string) => CODES.find((c) => c.slug === s);
 
 export type Topic = { key: TopicKey; slug: string; name: string; group: string; intro: string };
