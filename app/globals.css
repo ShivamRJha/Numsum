@@ -37,6 +37,7 @@ html.light .hero-orb{opacity:.25}
 html.light header.sticky{background:rgba(255,255,255,.85)!important;border-color:rgba(15,23,42,.1)!important}
 html.light footer{background:#eef0f5!important}
 html.light input,html.light select,html.light textarea{color:#0f172a}
+input,select,textarea{min-width:0;max-width:100%}
 html.light select option{background:#fff;color:#0f172a}
 html.light svg text[fill^="rgba(255,255,255"]{fill:rgba(15,23,42,.6)}
 html.light svg line[stroke^="rgba(255,255,255"],html.light svg path[stroke^="rgba(255,255,255"]{stroke:rgba(15,23,42,.12)}

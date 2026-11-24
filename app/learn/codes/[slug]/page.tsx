@@ -9,6 +9,7 @@ import { CodesNote } from "@/components/learn/codes-note";
 import { IrisCta } from "@/components/eng/iris-cta";
 import { Visual } from "@/components/learn/visuals";
 import { ModuleProgress } from "@/components/learn/train/module-progress";
+import { clauseSet, clauseCount } from "@/lib/learn/clauses";
 
 export const dynamic = "force-static";
 export const dynamicParams = false;
@@ -36,7 +37,7 @@ export default async function CodePage({ params }: { params: Promise<{ slug: str
         <div className="rounded-2xl border border-white/10 p-4"><dt className="text-white/45">Where it fits</dt><dd className="mt-1 text-white/85">{c.stage}</dd></div>
         <div className="rounded-2xl border border-white/10 p-4"><dt className="text-white/45">Who uses it</dt><dd className="mt-1 text-white/85">{c.audience}</dd></div>
       </dl>
-      <div className="mt-6 flex flex-wrap items-center gap-3"><Link href={`/learn/codes/${c.slug}/train`} className="rounded-full bg-amber-100 px-5 py-2.5 text-sm font-semibold text-black hover:bg-white">▶ Start training mode</Link><span className="text-sm text-white/50">{c.chapters.length} lessons · {c.chapters.filter((x) => x.visual).length} interactive diagrams · {c.mcq?.length || 0}-question quiz</span><ModuleProgress slug={c.slug} total={c.chapters.length} /></div>
+      <div className="mt-6 flex flex-wrap items-center gap-3"><Link href={`/learn/codes/${c.slug}/train`} className="rounded-full bg-amber-100 px-5 py-2.5 text-sm font-semibold text-black hover:bg-white">▶ Start training mode</Link><span className="text-sm text-white/50">{c.chapters.length} lessons · {c.chapters.filter((x) => x.visual).length} interactive diagrams · {c.mcq?.length || 0}-question quiz</span><ModuleProgress slug={c.slug} total={c.chapters.length} /></div>{clauseSet(c.slug) && <Link href={`/learn/codes/${c.slug}/clauses`} className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-300/25 bg-emerald-300/[.06] p-4 hover:border-emerald-300/50"><span><span className="font-semibold text-white">Clause-by-clause guide</span><span className="block text-sm text-white/60">Every one of the {clauseCount(clauseSet(c.slug)!)} clauses explained in plain English, searchable by number or word.</span></span><span className="text-sm text-emerald-100">Open →</span></Link>}
     </header>
 
     <div className="mt-10 grid gap-10 lg:grid-cols-[15rem_minmax(0,1fr)]">

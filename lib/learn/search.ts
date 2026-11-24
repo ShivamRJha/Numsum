@@ -1,5 +1,5 @@
 /** Client-safe search over the Learn index (no data imports here). */
-export type SearchItem = { t: string; s: string; h: string; k: "Module" | "Chapter" | "Topic" | "Damage mechanism" | "Guide" | "Term" | "Tool" | "Spec"; x: string };
+export type SearchItem = { t: string; s: string; h: string; k: "Module" | "Chapter" | "Topic" | "Damage mechanism" | "Guide" | "Term" | "Tool" | "Spec" | "Clause"; x: string };
 
 const norm = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[₀-₉]/g, (c) => String(c.charCodeAt(0) - 0x2080)).replace(/[^a-z0-9.§ ]+/g, " ");
 

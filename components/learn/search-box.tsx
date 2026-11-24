@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 let cache: Promise<SearchItem[]> | null = null;
 const load = () => (cache ??= fetch("/learn/search-index.json").then((r) => r.json()).catch(() => { cache = null; return []; }));
 
-const KIND_TONE: Record<SearchItem["k"], string> = { Module: "text-amber-100", Chapter: "text-sky-200", Topic: "text-violet-200", "Damage mechanism": "text-red-200", Guide: "text-emerald-200", Term: "text-white/60", Tool: "text-amber-100", Spec: "text-cyan-200" };
+const KIND_TONE: Record<SearchItem["k"], string> = { Module: "text-amber-100", Chapter: "text-sky-200", Topic: "text-violet-200", "Damage mechanism": "text-red-200", Guide: "text-emerald-200", Term: "text-white/60", Tool: "text-amber-100", Spec: "text-cyan-200", Clause: "text-emerald-200" };
 
 export function SearchBox({ initial = "", big = false, autoFocus = false, placeholder = "Search codes, clauses, damage mechanisms… e.g. “510 corrosion rate”, “CUI”, “RSF”" }: { initial?: string; big?: boolean; autoFocus?: boolean; placeholder?: string }) {
   const [q, setQ] = useState(initial);

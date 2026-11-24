@@ -1,69 +1,117 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
-import { EmptyState, LoadingState } from "@/components/data-states";
-import { HeroShowcase } from "@/components/hero-showcase";
 import { HomeSplash } from "@/components/home-splash";
-import { ProtectedLink } from "@/components/protected-link";
 import { Button, Card } from "@/components/ui";
-import { PublicImpactMetricCards } from "@/components/public-impact-metrics";
 import { PublicReviewCarousel } from "@/components/public-review-carousel";
-import { getPublicCaseStudies } from "@/lib/case-studies";
-import { getPublicChallenges } from "@/lib/repositories/firestore";
+import { SearchBox } from "@/components/learn/search-box";
+import { CODES } from "@/lib/learn/codes";
+import { CLAUSE_SETS, clauseCount } from "@/lib/learn/clauses";
+import { DM_LIB } from "@/lib/eng/damage-mechanisms";
+import { ENG_TOOLS } from "@/lib/eng/catalog";
+import SPECS from "@/lib/asme/spec-index.json";
 import { JsonLd, org } from "@/lib/seo";
 import { siteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "NumSum Labs — Free Inspection Engineering Calculators, IRIS Software & Investing Tools",
-  description: "Free calculators for inspection and plant engineers (ASME VIII, B31.3, API 510/570/653, API 571), IRIS inspection and reliability software, plain-language guides, and long-term SIP investing tools.",
+  title: "NumSum Labs — API & ASME Inspection Academy, Inspection Plan Generator and Engineering Calculators",
+  description: "Learn API 510, 570, 571, 574, 579, 580, 581 and ASME II and V clause by clause, prepare for API inspector exams, generate an inspection plan PDF, build a QAP and run code calculators. Free.",
   alternates: { canonical: "/" },
 };
 
-const personas = [
-  ["MSME Owner", "Structure a real problem and find a practical solution path.", "Submit Problem", "/submit-problem"],
-  ["Student", "Solve industry-backed challenges and build proof of work.", "Explore Challenges", "/challenges"],
-  ["Researcher", "Connect evidence and applied research to MSME priorities.", "Join Community", "/community"],
-  ["Industry Expert", "Guide diagnostics, reviews, SOPs, and implementation choices.", "See Challenges", "/challenges"],
-  ["Startup / Solution Provider", "Validate technology against approved industrial needs.", "View Case Studies", "/case-studies"],
+const lessons = CODES.reduce((n, c) => n + c.chapters.length, 0);
+const visuals = CODES.reduce((n, c) => n + c.chapters.filter((x) => x.visual).length, 0);
+const mcqs = CODES.reduce((n, c) => n + (c.mcq?.length || 0), 0);
+const clauses = CLAUSE_SETS.reduce((n, s) => n + clauseCount(s), 0);
+const calcs = ENG_TOOLS.length;
+
+const DO = [
+  ["New", "Inspection plan generator", "Answer standard questions about a vessel or piping circuit. Get a complete plan with intervals, damage mechanisms, tasks and acceptance — as a PDF.", "/engineering/inspection-plan-generator", "Make a plan"],
+  ["", "QAP builder", "Pick the material specs and NDE. Get a quality assurance plan with tests, frequency, references and hold points.", "/engineering/qap-builder", "Build a QAP"],
+  ["", "Material spec finder", `${(SPECS as unknown[]).length} ASME Section II specs: product form, mandatory tests and supplementary requirements.`, "/engineering/material-spec-finder", "Find a spec"],
+  ["", "Code calculators", "Vessel and pipe thickness, remaining life, hydrotest pressure, steam trap loss and damage mechanism screening — every step shown.", "/engineering", "Open calculators"],
 ] as const;
-const steps = ["Submit problem", "Structure with NumSum", "Launch challenge / solution path", "Track impact"] as const;
-
-async function FeaturedChallenges() {
-  const challenges = await getPublicChallenges().catch(() => []);
-  return <section id="featured-challenges" className="mx-auto max-w-7xl px-6 py-14"><div className="flex flex-col justify-between gap-4 md:flex-row md:items-end"><div><p className="section-eyebrow">Featured challenges</p><h2 className="section-title">Open problems, cleanly scoped.</h2></div><Button href="/challenges" variant="secondary">View all challenges</Button></div>{challenges.length ? <div className="mt-8 grid gap-5 md:grid-cols-3">{challenges.slice(0,3).map((c)=><Card key={c.id} className="premium-card h-full"><p className="text-sm text-blue-200">{[c.theme, c.industrySegment, c.status].filter(Boolean).join(" · ")}</p><h3 className="mt-3 text-2xl font-semibold tracking-[-.03em]">{c.title}</h3><p className="mt-3 text-sm leading-6 text-white/65">{c.shortDescription || c.description}</p><div className="mt-5"><Button href={`/challenges/${c.slug || c.id}`}>View Challenge</Button></div></Card>)}</div> : <div className="mt-8"><EmptyState message="Upcoming MSME innovation challenges will appear here after review." /></div>}</section>;
-}
-
-async function CaseStudiesPreview() {
-  const cases = await getPublicCaseStudies().catch(() => []);
-  return <section className="mx-auto max-w-7xl px-6 py-14"><div className="flex flex-col justify-between gap-4 md:flex-row md:items-end"><div><p className="section-eyebrow">Case studies</p><h2 className="section-title">Evidence before scale.</h2></div><Button href="/case-studies" variant="secondary">View case studies</Button></div>{cases.length ? <div className="mt-8 grid gap-5 md:grid-cols-3">{cases.slice(0,3).map((item) => <Card key={item.id} className="premium-card h-full"><p className="text-sm text-blue-200">{item.sector} · {item.problemType}</p><h3 className="mt-3 text-2xl font-semibold tracking-[-.03em]">{item.title}</h3><p className="mt-3 text-sm leading-6 text-white/65">{item.problem}</p><p className="mt-4 text-sm font-semibold text-amber-100">{item.impactMetric}</p><div className="mt-5"><Button href={`/case-studies/${item.slug}`}>Read case study</Button></div></Card>)}</div> : <div className="mt-8"><EmptyState message="Approved case studies will appear here after validation." /></div>}</section>;
-}
 
 export default function Home() {
   return <main className="overflow-hidden bg-[#060504] text-[#fff8ea]">
-    <JsonLd data={[{ "@context": "https://schema.org", ...org, description: "Engineering calculators, IRIS inspection software and investing tools." }, { "@context": "https://schema.org", "@type": "WebSite", name: "NumSum Labs", url: siteUrl, publisher: org }]} />
+    <JsonLd data={[{ "@context": "https://schema.org", ...org, description: "Inspection engineering academy, inspection plan generator and code calculators." }, { "@context": "https://schema.org", "@type": "WebSite", name: "NumSum Labs", url: siteUrl, publisher: org, potentialAction: { "@type": "SearchAction", target: `${siteUrl}/learn/search?q={q}`, "query-input": "required name=q" } }]} />
     <HomeSplash />
-    <section className="relative mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl items-center gap-10 px-6 py-12 md:grid-cols-[1.02fr_.98fr] md:py-16 lg:py-20">
+
+    {/* Hero: one promise, one search box, three doors */}
+    <section className="relative mx-auto max-w-6xl px-6 pb-10 pt-14 md:pt-20">
       <div className="hero-orb hero-orb-a" /><div className="hero-orb hero-orb-b" />
-      <div className="relative z-10 max-w-3xl">
-        <p className="mb-5 inline-flex rounded-full border border-amber-200/20 bg-amber-200/10 px-4 py-2 text-xs font-semibold uppercase tracking-[.22em] text-amber-100/85">Engineering · Inspection · Investing</p>
-        <h1 className="font-display text-4xl font-bold leading-[1.02] tracking-[-.055em] sm:text-5xl lg:text-6xl">Practical tools for plant engineers and long-term investors.</h1>
-        <p className="mt-6 max-w-2xl text-base leading-7 text-white/70 md:text-lg md:leading-8">Free code-based calculators for inspection and integrity work, IRIS inspection software for whole plants, and simple SIP planning tools — built by engineers, with every step shown.</p>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap"><Button href="/engineering">Engineering calculators</Button><Button href="/products/iris" variant="secondary">IRIS software</Button><Button href="/tools" variant="secondary">Investing tools</Button></div>
+      <div className="relative z-10 mx-auto max-w-3xl text-center">
+        <p className="mb-5 inline-flex rounded-full border border-amber-200/20 bg-amber-200/10 px-4 py-2 text-xs font-semibold uppercase tracking-[.22em] text-amber-100/85">Inspection · Integrity · Free</p>
+        <h1 className="font-display text-4xl font-bold leading-[1.04] tracking-[-.05em] sm:text-5xl lg:text-6xl">Learn the codes. Plan the inspection. Do the math.</h1>
+        <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-white/70 md:text-lg">API and ASME explained clause by clause, exam practice for API 510 and 570, and tools that turn your answers into an inspection plan or QAP.</p>
+        <div className="mx-auto mt-8 max-w-2xl text-left"><SearchBox big placeholder="Search any clause, mechanism or spec… e.g. “6.5.2”, “CUI”, “SA-516”" /></div>
+        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+          <Button href="/engineering/inspection-plan-generator">Generate an inspection plan</Button>
+          <Button href="/learn/exam-prep" variant="secondary">Prepare for API exam</Button>
+          <Button href="/learn/codes" variant="secondary">Codes academy</Button>
+        </div>
       </div>
-      <div className="relative z-10"><HeroShowcase /></div>
     </section>
 
-    <section className="mx-auto max-w-7xl px-6 py-14"><p className="section-eyebrow">Start here</p><h2 className="section-title">Pick what you came for.</h2><div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-      {[["Engineering tools", "Vessel and pipe thickness, remaining life, hydrotest pressure, steam trap loss and API 571 damage mechanism screening.", "/engineering", "Open the calculators"], ["IRIS software", "Statutory inspections, thickness monitoring, RBI, IBR boilers and steam traps for the whole plant — office PC and offline tablet.", "/products/iris", "Explore IRIS"], ["Investing tools", "Goal planner for monthly SIPs, fund screener with expense ratios, stock checks with a caution flag for overheated stocks.", "/tools", "Plan a goal"], ["Learn", "Short guides: RBI, API 510/570/653, corrosion rate, 69 damage mechanisms, SIPs and investing terms.", "/learn", "Start learning"]].map(([t, d, h, c]) => <Card key={h} className="premium-card flex h-full flex-col"><h3 className="text-xl font-semibold">{t}</h3><p className="mt-3 flex-1 text-sm leading-6 text-white/65">{d}</p><Button href={h} variant="secondary" className="mt-5">{c}</Button></Card>)}
-    </div></section>
+    {/* Proof band */}
+    <section className="mx-auto max-w-6xl px-6">
+      <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-3xl border border-white/10 bg-white/10 sm:grid-cols-3 lg:grid-cols-6">
+        {[[CODES.length, "standards taught"], [clauses, "clauses explained"], [lessons, "lessons"], [visuals, "interactive diagrams"], [mcqs, "quiz questions + unlimited drills"], [DM_LIB.length, "damage mechanisms"]].map(([n, l]) => <div key={l as string} className="bg-[#0b0906] px-4 py-5 text-center"><dt className="sr-only">{l}</dt><dd className="font-display text-3xl font-bold text-amber-100">{n}</dd><dd className="mt-1 text-xs leading-4 text-white/55">{l}</dd></div>)}
+      </dl>
+    </section>
 
-    <section className="mx-auto max-w-7xl px-6 py-14"><p className="section-eyebrow">For MSMEs and the innovation community</p><h2 className="section-title">Bring a real industrial problem.</h2><div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">{personas.map(([title, benefit, cta, href]) => <Card key={title} className="premium-card flex h-full flex-col"><h3 className="text-xl font-semibold">{title}</h3><p className="mt-3 flex-1 text-sm leading-6 text-white/65">{benefit}</p><Button href={href} variant="secondary" className="mt-5">{cta}</Button></Card>)}</div></section>
+    {/* Learn */}
+    <section className="mx-auto max-w-6xl px-6 py-16">
+      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end"><div><p className="section-eyebrow">Learn</p><h2 className="section-title">A course for every code you inspect to.</h2></div><Link href="/learn/codes" className="text-sm text-amber-100 hover:text-white">All modules →</Link></div>
+      <div className="mt-8 grid gap-5 lg:grid-cols-[1.3fr_1fr]">
+        <Card className="premium-card">
+          <h3 className="text-xl font-semibold">Codes academy</h3>
+          <p className="mt-2 text-sm leading-6 text-white/65">Each module runs as short lessons with diagrams you can play with, then flashcards and a scored quiz. Your progress saves in the browser.</p>
+          <ul className="mt-5 grid gap-2 sm:grid-cols-2">
+            {CODES.map((c) => <li key={c.slug}><Link href={`/learn/codes/${c.slug}/train`} className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[.03] px-3 py-2.5 text-sm hover:border-amber-200/40"><span className="min-w-0 truncate"><span className="font-semibold text-white">{c.short}</span> <span className="text-white/50">{c.chapters.length} lessons</span></span><span className="text-amber-100/80">▶</span></Link></li>)}
+          </ul>
+        </Card>
+        <div className="grid gap-5">
+          <Card className="premium-card">
+            <p className="text-xs font-semibold uppercase tracking-[.18em] text-emerald-200">Clause by clause</p>
+            <h3 className="mt-2 text-xl font-semibold">Every clause, in plain English</h3>
+            <p className="mt-2 text-sm leading-6 text-white/65">Find a clause by number or word and read what it actually asks you to do, with its key numbers.</p>
+            <div className="mt-4 flex flex-wrap gap-2">{CLAUSE_SETS.map((s) => { const c = CODES.find((x) => x.slug === s.slug); return c ? <Button key={s.slug} href={`/learn/codes/${s.slug}/clauses`} variant="secondary">{c.short} — {clauseCount(s)} clauses</Button> : null; })}</div>
+          </Card>
+          <Card className="premium-card">
+            <p className="text-xs font-semibold uppercase tracking-[.18em] text-sky-200">Exam prep</p>
+            <h3 className="mt-2 text-xl font-semibold">API 510 and API 570</h3>
+            <p className="mt-2 text-sm leading-6 text-white/65">A study plan, calculation drills with fresh numbers every time, and timed mock exams scored by topic.</p>
+            <div className="mt-4 flex flex-wrap gap-2"><Button href="/learn/exam-prep/api-510">API 510</Button><Button href="/learn/exam-prep/api-570" variant="secondary">API 570</Button></div>
+          </Card>
+        </div>
+      </div>
+    </section>
 
-    <section id="how-it-works" className="mx-auto max-w-7xl px-6 py-14"><p className="section-eyebrow">How NumSum works</p><h2 className="section-title">A disciplined route from issue to outcome.</h2><div className="mt-8 grid gap-4 md:grid-cols-4">{steps.map((step, index) => <Card key={step} className="premium-card relative"><p className="text-sm font-semibold text-amber-100/80">0{index + 1}</p><h3 className="mt-6 text-xl font-semibold">{step}</h3><p className="mt-3 text-sm leading-6 text-white/60">{index === 0 ? "Private intake starts the journey." : index === 1 ? "Review turns noise into scope." : index === 2 ? "The right contributors engage." : "Approved metrics become learning."}</p></Card>)}</div></section>
+    {/* Do */}
+    <section className="mx-auto max-w-6xl px-6 py-6">
+      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end"><div><p className="section-eyebrow">Do the work</p><h2 className="section-title">From questions to documents.</h2></div><Link href="/engineering" className="text-sm text-amber-100 hover:text-white">All {calcs} engineering tools →</Link></div>
+      <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {DO.map(([tag, t, d, h, c]) => <Card key={h} className="premium-card flex h-full flex-col">{tag ? <span className="mb-2 w-fit rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-black">{tag}</span> : null}<h3 className="text-lg font-semibold">{t}</h3><p className="mt-2 flex-1 text-sm leading-6 text-white/65">{d}</p><Button href={h} variant="secondary" className="mt-5">{c}</Button></Card>)}
+      </div>
+    </section>
 
-    <section className="mx-auto max-w-7xl px-6 py-14"><p className="section-eyebrow">Impact metrics</p><h2 className="section-title">Public, approved progress signals.</h2><div className="mt-8"><Suspense fallback={<LoadingState label="Loading public metrics" />}><PublicImpactMetricCards /></Suspense></div></section>
-    <Suspense fallback={<section className="mx-auto max-w-7xl px-6 py-14"><LoadingState label="Loading challenges" /></section>}><FeaturedChallenges /></Suspense>
-    <Suspense fallback={<section className="mx-auto max-w-7xl px-6 py-14"><LoadingState label="Loading case studies" /></section>}><CaseStudiesPreview /></Suspense>
+    {/* Damage mechanisms */}
+    <section className="mx-auto max-w-6xl px-6 py-16">
+      <Card className="premium-card grid items-center gap-6 md:grid-cols-[1fr_auto]">
+        <div><p className="section-eyebrow">API 571</p><h2 className="mt-1 font-display text-2xl font-semibold tracking-[-.03em] md:text-3xl">What could be damaging this equipment?</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-white/65">Answer a few service questions to screen {DM_LIB.length} damage mechanisms, then read how each one looks and how to find it.</p></div>
+        <div className="flex flex-col gap-3 sm:flex-row md:flex-col"><Button href="/engineering/damage-mechanism-screening">Screen mechanisms</Button><Button href="/learn/damage-mechanisms" variant="secondary">Browse the library</Button></div>
+      </Card>
+    </section>
+
+    {/* More from NumSum */}
+    <section className="mx-auto max-w-6xl px-6 pb-16">
+      <p className="section-eyebrow">More from NumSum</p>
+      <div className="mt-6 grid gap-5 md:grid-cols-3">
+        {[["IRIS software", "Plant-wide inspection records: statutory inspections, thickness monitoring, RBI, boilers and steam traps. Office PC and offline tablet.", "/products/iris", "Explore IRIS"], ["Investing tools", "Goal planner for monthly SIPs, fund screener with costs shown, and stock checks that flag overheated prices.", "/tools", "Plan a goal"], ["For MSMEs", "Bring a real industrial problem. We help scope it and connect it with students, researchers and experts.", "/for-msmes", "Learn how it works"]].map(([t, d, h, c]) => <Card key={h} className="premium-card flex h-full flex-col"><h3 className="text-lg font-semibold">{t}</h3><p className="mt-2 flex-1 text-sm leading-6 text-white/65">{d}</p><Button href={h} variant="secondary" className="mt-5">{c}</Button></Card>)}
+      </div>
+    </section>
+
     <Suspense fallback={null}><PublicReviewCarousel /></Suspense>
-    <section className="mx-auto max-w-7xl px-6 py-20"><Card className="premium-card text-center"><h2 className="font-display text-3xl font-semibold tracking-[-.04em] md:text-5xl">Ready to solve your industrial problem?</h2><p className="mx-auto mt-4 max-w-2xl text-white/65">Start with a private submission or join the member network to participate in practical MSME innovation.</p><div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row"><ProtectedLink href="/submit-problem" className="rounded-full bg-amber-100 px-5 py-3 text-sm font-semibold text-black">Submit Problem</ProtectedLink><Button href="/join" variant="secondary">Join as Member</Button></div></Card></section>
   </main>;
 }

@@ -13,7 +13,12 @@ export function Trainer({ m, next }: { m: CodeModule; next?: { slug: string; sho
   const { p, update } = useProgress(m.slug);
   const [tab, setTab] = useState<Tab>("lessons");
   const [i, setI] = useState(0);
-  useEffect(() => { const k = m.chapters.findIndex((c) => c.id === p.last); if (k >= 0) setI(k); }, [m.chapters, p.last]);
+  useEffect(() => {
+    const h = typeof window !== "undefined" ? decodeURIComponent(window.location.hash.slice(1)) : "";
+    const byHash = h ? m.chapters.findIndex((c) => c.id === h) : -1;
+    const k = byHash >= 0 ? byHash : m.chapters.findIndex((c) => c.id === p.last);
+    if (k >= 0) setI(k);
+  }, [m.chapters, p.last]);
   const ch = m.chapters[i]; const done = new Set(p.done); const pct = Math.round((done.size / m.chapters.length) * 100);
   const go = (k: number) => { const n = Math.max(0, Math.min(m.chapters.length - 1, k)); setI(n); update((x) => ({ ...x, last: m.chapters[n].id })); window.scrollTo({ top: 0, behavior: "smooth" }); };
   const complete = () => { update((x) => ({ ...x, done: [...new Set([...x.done, ch.id])], last: ch.id })); if (i < m.chapters.length - 1) go(i + 1); else { setTab("quiz"); document.getElementById("trainer-top")?.scrollIntoView({ behavior: "smooth" }); } };
