@@ -62,7 +62,7 @@ export default function Home() {
 
     {/* Learn */}
     <section className="mx-auto max-w-6xl px-6 py-16">
-      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end"><div><p className="section-eyebrow">Learn</p><h2 className="section-title">A course for every code you inspect to.</h2></div><Link href="/learn/codes" className="text-sm text-amber-100 hover:text-white">All modules →</Link></div>
+      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end"><div><p className="section-eyebrow">Learn</p><h2 className="section-title">A course for every code you inspect to.</h2></div><Link href="/learn/codes" className="whitespace-nowrap text-sm text-amber-100 hover:text-white">All modules →</Link></div>
       <div className="mt-8 grid gap-5 lg:grid-cols-[1.3fr_1fr]">
         <Card className="premium-card">
           <h3 className="text-xl font-semibold">Codes academy</h3>
@@ -90,7 +90,7 @@ export default function Home() {
 
     {/* Do */}
     <section className="mx-auto max-w-6xl px-6 py-6">
-      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end"><div><p className="section-eyebrow">Do the work</p><h2 className="section-title">From questions to documents.</h2></div><Link href="/engineering" className="text-sm text-amber-100 hover:text-white">All {calcs} engineering tools →</Link></div>
+      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end"><div><p className="section-eyebrow">Do the work</p><h2 className="section-title">From questions to documents.</h2></div><Link href="/engineering" className="whitespace-nowrap text-sm text-amber-100 hover:text-white">All {calcs} engineering tools →</Link></div>
       <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {DO.map(([tag, t, d, h, c]) => <Card key={h} className="premium-card flex h-full flex-col">{tag ? <span className="mb-2 w-fit rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-black">{tag}</span> : null}<h3 className="text-lg font-semibold">{t}</h3><p className="mt-2 flex-1 text-sm leading-6 text-white/65">{d}</p><Button href={h} variant="secondary" className="mt-5">{c}</Button></Card>)}
       </div>

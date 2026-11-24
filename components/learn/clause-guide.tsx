@@ -24,6 +24,10 @@ export function ClauseGuide({ slug, rows, lessons }: { slug: string; rows: Claus
   }, []);
 
   const query = q.trim();
+  useEffect(() => {
+    const el = document.getElementById("clause-list"); if (!el) return;
+    if (el.getBoundingClientRect().top < 0) el.scrollIntoView({ block: "start" });
+  }, [query]);
   const shown = useMemo(() => {
     if (!query) return all;
     const n = norm(query);
@@ -40,7 +44,7 @@ export function ClauseGuide({ slug, rows, lessons }: { slug: string; rows: Claus
       <p className="mb-2 font-mono text-[11px] uppercase tracking-[.18em] text-white/40">Sections</p>
       {tops.map((t) => <a key={t.id} href={`#${anchor(t.id)}`} className="block truncate rounded-lg px-2 py-1.5 text-white/60 hover:bg-white/5 hover:text-white"><span className="mr-2 font-mono text-amber-100/70">{t.id}</span>{t.title.replace(/^Annex [A-Z]: /, "")}</a>)}
     </div></nav>
-    <div className="min-w-0">
+    <div className="min-w-0 scroll-mt-24" id="clause-list">
       <div className="sticky top-16 z-10 -mx-1 rounded-2xl border border-white/10 bg-[#0b1220] p-3 shadow-lg">
         <div className="flex flex-wrap items-center gap-3">
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search clauses: number, word or phrase (e.g. 6.5.2, pitting, 50 ppm)" className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-white/35" aria-label="Search clauses" />
