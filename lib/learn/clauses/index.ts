@@ -99,7 +99,6 @@ export const CLAUSE_SETS: ClauseSet[] = [
   {
     slug: "api-579-fitness-for-service",
     rows: API579_CLAUSES,
-    partial: "All 14 Parts and Annex 1A so far; the remaining annexes are being added.",
     lesson: (id) => {
       const m = /^(\d+)([A-H]?)/.exec(id);
       if (!m) return undefined;

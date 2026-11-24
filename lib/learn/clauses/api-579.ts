@@ -25,5 +25,17 @@ import { P22 } from "./api-579.p22";
 import { P23 } from "./api-579.p23";
 import { P24 } from "./api-579.p24";
 import { P25 } from "./api-579.p25";
+import { P26 } from "./api-579.p26";
 
-export const API579_CLAUSES: ClauseRow[] = [...P1, ...P2, ...P3, ...P4, ...P5, ...P6, ...P7, ...P8, ...P9, ...P10, ...P11, ...P12, ...P13, ...P14, ...P15, ...P16, ...P17, ...P18, ...P19, ...P20, ...P21, ...P22, ...P23, ...P24, ...P25];
+const ALL: ClauseRow[] = [...P1, ...P2, ...P3, ...P4, ...P5, ...P6, ...P7, ...P8, ...P9, ...P10, ...P11, ...P12, ...P13, ...P14, ...P15, ...P16, ...P17, ...P18, ...P19, ...P20, ...P21, ...P22, ...P23, ...P24, ...P25, ...P26];
+
+// Order as in the Standard: each Part followed by its annexes (1, 1A, 2, 2A–2F, 3, 3A, …).
+const rank = (id: string) => {
+  const m = /^(\d+)([A-Z]?)/.exec(id.split(".")[0]);
+  return m ? Number(m[1]) * 10 + (m[2] ? m[2].charCodeAt(0) - 64 : 0) : 9999;
+};
+
+export const API579_CLAUSES: ClauseRow[] = ALL.map((r, i) => [r, i] as const)
+  .sort((a, b) => rank(a[0][0]) - rank(b[0][0]) || a[1] - b[1])
+  .map(([r]) => r);
+
