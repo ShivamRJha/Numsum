@@ -34,7 +34,7 @@ export default async function ClausesPage({ params }: { params: Promise<{ slug: 
       <h1 className="mt-1 font-display text-3xl font-bold tracking-[-.03em] text-white md:text-4xl">Every clause of {c.short}, explained</h1>
       <p className="mt-3 text-white/65">All {n} numbered clauses and annexes in order, each in plain English with its key numbers. Search by clause number or word, link straight to any clause, or jump to the lesson that teaches it.</p>
       <div className="mt-4 flex flex-wrap gap-2 text-sm">
-        {s.partial ? <span className="rounded-full border border-amber-200/30 bg-amber-200/10 px-3 py-1 text-amber-100">In progress — {s.partial}</span> : <span className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-emerald-100">100% of clauses covered</span>}
+        {s.partial ? <span className="rounded-full border border-amber-200/30 bg-amber-200/10 px-3 py-1 text-amber-100">Coverage — {s.partial}</span> : <span className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-emerald-100">100% of clauses covered</span>}
         <Link href={`/learn/codes/${slug}/train`} className="rounded-full border border-white/15 px-3 py-1 text-white/80 hover:border-white/40">▶ Training mode</Link>
         <Link href={`/learn/codes/${slug}`} className="rounded-full border border-white/15 px-3 py-1 text-white/80 hover:border-white/40">Module overview</Link>
         {/^api-5(10|70)/.test(slug) && <Link href={`/learn/exam-prep/${slug.slice(0, 7)}`} className="rounded-full border border-white/15 px-3 py-1 text-white/80 hover:border-white/40">{c.short} exam prep</Link>}
