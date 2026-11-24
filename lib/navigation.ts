@@ -19,6 +19,7 @@ export const siteMenu: MenuGroup[] = [
     { label: "Discussions", href: "/research/discuss", desc: "Methods, papers and ideas" },
     { label: "Positions", href: "/research/positions", desc: "PhD, postdoc and collaborations" },
     { label: "Researchers", href: "/research/people", desc: "Find people by field and interest" },
+    { label: "My dashboard", href: "/research/me", desc: "Private targets, reading and progress" },
     { label: "Research library", href: "/research/library", desc: "Research linked to industrial problems" },
   ] },
   { label: "Engineering", home: "/engineering", blurb: "Free calculators and planners for inspection and plant engineers.", base: ["/engineering"], cta: { label: "All engineering tools", href: "/engineering" }, links: [
