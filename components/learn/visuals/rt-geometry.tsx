@@ -5,7 +5,7 @@ import { Slider, Stat, VizFrame } from "./frame";
 export function RtGeometry() {
   const [F, setF] = useState(3); const [D, setD] = useState(600); const [d, setDd] = useState(25);
   const ug = (F * d) / D; const lim = d < 50 ? 0.51 : d < 75 ? 0.76 : d < 100 ? 1.02 : 1.78;
-  const ok = ug <= lim; const sx = 300, sy = 20, oy = 40 + (D / 1500) * 140, fy = oy + Math.max(d, 4) * 0.6;
+  const ok = ug <= lim; const sx = 300, sy = 20, oy = 50 + (D / 1500) * 160, fy = oy + Math.min(Math.max(d, 4) * 0.8, 70);
   return <VizFrame title="Interactive — radiographic geometry and unsharpness" caption="Ug = F × d ÷ D, where F is the source size, D the source-to-object distance and d the object-to-detector distance. Recommended maximum Ug rises with thickness (0.51 mm below 50 mm up to 1.78 mm above 100 mm); d is used here as the material thickness for simplicity.">
     <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_16rem]">
       <svg viewBox="0 0 600 310" className="w-full" role="img" aria-label="Source, object and film geometry">
