@@ -25,7 +25,7 @@ type TsPoint = { asOfDate: string; reportedValue?: { raw?: number } };
 export async function fetchFinancials(symbol: string): Promise<Financials | null> {
   const y = `${symbol}.NS`;
   const types = (["annual", "quarterly"] as const).flatMap((p) => Object.values(ITEMS).map((t) => `${p}${t}`)).join(",");
-  const url = `https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/${encodeURIComponent(y)}?symbol=${encodeURIComponent(y)}&type=${types}&period1=946684800&period2=${Math.floor(Date.now() / 1000)}&merge=false&padTimeSeries=true`;
+  const url = `https://query2.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/${encodeURIComponent(y)}?symbol=${encodeURIComponent(y)}&type=${types}&period1=946684800&period2=${Math.floor(Date.now() / 1000)}`;
   let json: { timeseries?: { result?: Record<string, unknown>[] } };
   try {
     const res = await fetch(url, { headers: { "user-agent": UA }, signal: AbortSignal.timeout(15_000), next: { revalidate: 43_200 } });
@@ -62,7 +62,7 @@ const div = (a: number | null | undefined, b: number | null | undefined) => (a =
 /** Ratios per period. Return ratios use the average of opening and closing balances when both exist; quarterly flows are annualised. */
 function withRatios(rows: Period[], annualise: number): (Period & Ratios)[] {
   return rows.map((p, i) => {
-    const prev = rows[i - (annualise === 4 ? 4 : 1)] || rows[i - 1];
+    const prev = annualise === 4 ? rows.find((r) => Math.abs(Date.parse(r.end) - (Date.parse(p.end) - 365 * 864e5)) < 20 * 864e5) : rows[i - 1];
     const avg = (k: Item) => { const a = p[k], b = prev?.[k]; return a == null ? null : b == null ? a : (a + b) / 2; };
     const capital = (p.equity ?? 0) + (p.debt ?? 0);
     const ebit = p.op ?? (p.pbt != null && p.interest != null ? p.pbt + Math.abs(p.interest) : null);
@@ -84,6 +84,11 @@ function cagr(rows: Period[], k: Item, years: number) {
 }
 
 function growth(annual: Period[], q: Period[]): Financials["growth"] {
-  const yoy = (k: Item) => { if (q.length < 5) return null; const a = q[q.length - 5][k], b = q[q.length - 1][k]; return a == null || b == null || a <= 0 ? null : b / a - 1; };
+  const yoy = (k: Item) => {
+    const last = q[q.length - 1]; if (!last) return null;
+    const target = Date.parse(last.end) - 365 * 864e5;
+    const prev = q.find((p) => Math.abs(Date.parse(p.end) - target) < 20 * 864e5);
+    const a = prev?.[k], b = last[k]; return a == null || b == null || a <= 0 ? null : b / a - 1;
+  };
   return { sales3: cagr(annual, "sales", 3), profit3: cagr(annual, "np", 3), sales1: cagr(annual, "sales", 1), profit1: cagr(annual, "np", 1), qSalesYoy: yoy("sales"), qProfitYoy: yoy("np") };
 }

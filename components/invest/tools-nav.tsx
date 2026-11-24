@@ -1,8 +1,5 @@
 "use client";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { ExplainToggle } from "@/components/invest/explain";
-import { cn } from "@/lib/utils";
 
 export const TOOL_LINKS = [
   ["Overview", "/tools"],
@@ -15,16 +12,9 @@ export const TOOL_LINKS = [
   ["How it works", "/tools/methodology"],
 ] as const;
 
+/** The page list lives in the site's section bar; this row keeps only the explanation-level switch. */
 export function ToolsNav() {
-  const path = usePathname() || "";
-  return <nav aria-label="Investment tools" className="sticky top-16 z-30 -mx-6 mb-8 border-b border-white/10 bg-[#060a12]/85 px-6 backdrop-blur-xl">
-    <div className="mx-auto flex max-w-7xl items-center gap-3 py-2">
-      <div className="flex min-w-0 flex-1 gap-1 overflow-x-auto text-sm">
-        {TOOL_LINKS.map(([label, href]) => { const active = href === "/tools" ? path === "/tools" : path.startsWith(href); return <Link key={href} href={href} aria-current={active ? "page" : undefined} className={cn("whitespace-nowrap rounded-full px-4 py-2 transition", active ? "bg-amber-100 font-semibold text-black" : "text-white/65 hover:bg-white/10 hover:text-white")}>{label}</Link>; })}
-      </div>
-      <div className="hidden shrink-0 items-center gap-2 sm:flex"><span className="text-xs text-white/45">Explain</span><ExplainToggle /></div>
-    </div>
-  </nav>;
+  return <div className="mb-6 hidden items-center justify-end gap-2 sm:flex"><span className="text-xs text-white/45">Explain</span><ExplainToggle /></div>;
 }
 
 export function MobileExplainBar() {

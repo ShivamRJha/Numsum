@@ -93,7 +93,10 @@ export function summarise(raw: { title: string; link: string; source: string; da
   const points = score === null ? 0 : Math.round(score * 6 * confidence);
   const label: NewsSummary["label"] = score === null || confidence < 0.2 ? "Not enough news" : score > 0.35 ? "Positive" : score > 0.1 ? "Slightly positive" : score < -0.35 ? "Negative" : score < -0.1 ? "Slightly negative" : "Neutral";
   const drivers = [...scored].sort((a, b) => Math.abs(b.tone * b.w) - Math.abs(a.tone * a.w)).slice(0, 3).map((i) => i.title);
-  return { items: items.slice(0, 30).map(({ w: _w, ...i }) => i), score, label, count: items.length, points, drivers, source: "Google News (India)" };
+  // show company-specific stories first; general market round-ups only if little else exists
+  const specific = items.filter((i) => i.w / Math.exp(-Math.max(0, (now - Date.parse(i.date)) / 864e5) / 10) >= 0.7);
+  const shown = specific.length >= 5 ? specific : items;
+  return { items: shown.slice(0, 30).map(({ w: _w, ...i }) => i), score, label, count: items.length, points, drivers, source: "Google News (India)" };
 }
 
 export async function fetchNews(name: string, symbol: string): Promise<NewsSummary> {

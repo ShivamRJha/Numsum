@@ -28,6 +28,7 @@ export const siteMenu: MenuGroup[] = [
     { label: "Goal planner", href: "/tools/investment-planner", desc: "Monthly SIP and allocation for a goal" },
     { label: "Stock SIP builder", href: "/tools/stock-sip", desc: "Plan a basket of stocks" },
     { label: "Portfolio check", href: "/tools/portfolio", desc: "Diversification and overlap" },
+    { label: "How scores work", href: "/tools/methodology", desc: "Data sources, checks and methodology" },
   ] },
   { label: "IRIS", home: "/products/iris", blurb: "Inspection and reliability software for process plants.", base: ["/products"], cta: { label: "Book a demo", href: "/products/iris#demo" }, links: [
     { label: "IRIS inspection software", href: "/products/iris", desc: "Statutory and RBI inspections, offline tablet" },
